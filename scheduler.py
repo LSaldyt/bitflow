@@ -23,6 +23,7 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     while True:
         try:
             transaction = serialize_queue.get(block=False)
+            print('Got: ', transaction)
             label = transaction.out_label
             if label not in batches:
                 batches[label] = Batch()
@@ -46,19 +47,24 @@ def fetch(module_name):
     return getattr(module, module_name)()
 
 def module_runner(module_name, serialize_queue, batch_file):
+    print('Running ', module_name)
     module = fetch(module_name)
 
     if batch_file is None:
         gen = module.process()
+        print('Ran independent generation')
     else:
+        print('Loading batch file..')
         batch = Batch()
         batch.load(batch_file)
-        # print(batch.items)
-        gen = [transaction for item in batch.items for transaction in module.process(item)]
+        gen = (transaction for item in batch.items for transaction in module.process(item))
+        print('Created batch generator')
     i = 0
     for transaction in gen:
+        print('Putting: ', transaction)
         serialize_queue.put(transaction)
         i += 1
+    print('Effectively finished ', module_name)
 
 class Scheduler:
     def __init__(self, max_workers=20):
@@ -67,7 +73,7 @@ class Scheduler:
         self.serialize_queue   = Queue()
         self.schedule_queue    = Queue()
         self.driver_process    = Process(target=driver_listener,  args=(self.transaction_queue,))
-        sizes = {'__default__' : 100}
+        sizes = {'__default__' : 10}
         self.indep_batch_process     = Process(target=batch_serializer, args=(self.indep_serialize_queue, self.transaction_queue, self.schedule_queue, sizes))
         self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, sizes))
         self.dependents        = defaultdict(list)
@@ -117,6 +123,9 @@ class Scheduler:
         self.workers.append((dependent, process))
 
     def check(self):
+        for name, worker in self.workers:
+            if not worker.is_alive():
+                print('Finished ', name)
         self.workers = [(name, worker) for name, worker in self.workers if worker.is_alive()]
         while len(self.waiting) > 0:
             if len(self.workers) < self.max_workers:

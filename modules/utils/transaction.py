@@ -15,3 +15,9 @@ class Transaction:
         self.from_uuid      = from_uuid
         if self.data is not None:
             self.data['uuid'] = str(self.uuid)
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return '({}, {}), [{}, {}], {}'.format(self.in_label, self.out_label, self.from_uuid, self.uuid, self.data)

@@ -23,12 +23,6 @@ class Driver():
         self.lset = set()
 
     def run(self, transaction):
-        print(transaction.in_label, flush=True)
-        print(transaction.out_label, flush=True)
-        print(transaction.uuid, flush=True)
-        print(transaction.from_uuid, flush=True)
-        print(transaction.data, flush=True)
-
         if transaction.query is not None:
             with self.neo_client.session() as session:
                 session.run(transaction.query)
@@ -60,6 +54,7 @@ class Driver():
         tx.run(query)
 
     def add(self, data, label):
+        print('Adding ', label)
         with self.neo_client.session() as session:
             node = session.write_transaction(add_json_node, label, data)
             records = node.records()
@@ -90,9 +85,7 @@ def driver_listener(transaction_queue):
         for transaction in batch.items:
             print(transaction, flush=True)
             try:
-                print('Adding..')
                 added = driver.run(transaction)
-                print('Post adding')
                 duration = time() - start
                 total = len(driver.hset) + len(driver.lset)
                 print('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)), flush=True)
