@@ -60,11 +60,8 @@ class Driver():
         tx.run(query)
 
     def add(self, data, label):
-        print(data, label)
         with self.neo_client.session() as session:
-            print('pre write')
             node = session.write_transaction(add_json_node, label, data)
-            print('after')
             records = node.records()
             node = (next(records)['n'])
             return node['uuid']
