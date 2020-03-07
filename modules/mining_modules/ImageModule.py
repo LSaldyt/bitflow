@@ -20,7 +20,7 @@ class ImageModule(Module):
             if ext not in EXCLUDED_EXTENSIONS:
                 filename = 'data/images/{uuid}_{i}.'.format(uuid=str(uuid), i=str(i)) + ext
                 try:
-                    yield self.default_transaction(data=dict(filename=filename, url=image, parent=title), uuid=uuid)
+                    yield self.default_transaction(data=dict(filename=filename, url=image, parent=title), uuid=uuid + '-' + str(i))
                     urllib.request.urlretrieve(image, filename)
                 except urllib3.exceptions.NewConnectionError:
                     pass

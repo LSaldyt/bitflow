@@ -28,23 +28,24 @@ class Driver():
                 session.run(transaction.query)
         else:
             id1 = transaction.from_uuid
-            if transaction.data is None:
-                id2 = transaction.uuid
-            else:
-                print('Adding.....')
-                id2 = self.add(transaction.data, transaction.out_label)
-                print('Done')
+            id2 = transaction.uuid
+            if transaction.data is not None:
                 if id2 in self.hset:
+                    print(id2)
+                    1/0
                     return False
                 self.hset.add(id2)
-            print(id1, flush=True)
+                self.add(transaction.data, transaction.out_label)
+            print(id1, transaction.connect_labels, flush=True)
             if id1 is not None and transaction.connect_labels is not None:
                 id1 = str(id1)
                 key = str(id1) + str(id2)
                 if key in self.lset:
+                    print(key)
+                    1/0
                     return False
+                self.lset.add(key)
                 with self.neo_client.session() as session:
-                    self.lset.add(key)
                     session.write_transaction(self.link, id1, id2, transaction.in_label, transaction.out_label, *transaction.connect_labels)
         return True
 
@@ -56,10 +57,7 @@ class Driver():
     def add(self, data, label):
         print('Adding ', label)
         with self.neo_client.session() as session:
-            node = session.write_transaction(add_json_node, label, data)
-            records = node.records()
-            node = (next(records)['n'])
-            return node['uuid']
+            session.write_transaction(add_json_node, label, data)
 
     def get(self, uuid):
         with self.neo_client.session() as session:
