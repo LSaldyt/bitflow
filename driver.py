@@ -23,6 +23,12 @@ class Driver():
         self.lset = set()
 
     def run(self, transaction):
+        print(transaction.in_label, flush=True)
+        print(transaction.out_label, flush=True)
+        print(transaction.uuid, flush=True)
+        print(transaction.from_uuid, flush=True)
+        print(transaction.data, flush=True)
+
         if transaction.query is not None:
             with self.neo_client.session() as session:
                 session.run(transaction.query)
@@ -31,7 +37,9 @@ class Driver():
             if transaction.data is None:
                 id2 = transaction.uuid
             else:
+                print('Adding.....')
                 id2 = self.add(transaction.data, transaction.out_label)
+                print('Done')
                 if id2 in self.hset:
                     return False
                 self.hset.add(id2)
@@ -52,8 +60,11 @@ class Driver():
         tx.run(query)
 
     def add(self, data, label):
+        print(data, label)
         with self.neo_client.session() as session:
+            print('pre write')
             node = session.write_transaction(add_json_node, label, data)
+            print('after')
             records = node.records()
             node = (next(records)['n'])
             return node['uuid']
@@ -80,17 +91,19 @@ def driver_listener(transaction_queue):
         batch = Batch()
         batch.load(batch_file)
         for transaction in batch.items:
+            print(transaction, flush=True)
             try:
+                print('Adding..')
                 added = driver.run(transaction)
+                print('Post adding')
                 duration = time() - start
                 total = len(driver.hset) + len(driver.lset)
-                print('Driver rate: {} of {} ({}|{})\r'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)), flush=True, end='')
+                print('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)), flush=True)
                 if added:
                     i += 1
+                    print(i, flush=True)
             except KeyboardInterrupt:
                 raise KeyboardInterrupt
-            except neobolt.exceptions.CypherSyntaxError:
-                pass
             except Exception as e:
                 print(e, flush=True)
                 print(transaction.in_label, flush=True)

@@ -1,10 +1,12 @@
 from time import sleep
 
 def add_json_node(tx, label='Generic', properties=None):
+    print('here')
     if properties is None:
         properties = dict()
     prop_set = '{' + ','.join('{key}:${key}'.format(key=k) for k in properties) + '}'
     query = 'MERGE (n:{label} '.format(label=label) + prop_set + ') RETURN n'
+    print(query)
     return tx.run(query, **properties)
 
 def get_count(tx, finder):

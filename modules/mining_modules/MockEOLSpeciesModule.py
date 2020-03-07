@@ -7,6 +7,9 @@ class MockEOLSpeciesModule(Module):
     def process(self):
         # x.canonical, x.page_id, x.rank
         data = {'x.canonical' : 'Megaptera', 'x.page_id' : 46559443, 'x.rank' : 'genus'}
+        data = {k.replace('x.', '') : v for k, v in data.items()}
         name = 'Megaptera'
-        yield self.custom_transaction(data=data, in_label='Taxon', out_label='EOLPage', uuid=name + '_eol_page', from_uuid=name, connect_labels=('eol_page', 'eol_page'))
+        transaction = self.custom_transaction(data=data)
+        yield transaction
+        # yield self.custom_transaction(data=data, in_label='Taxon', out_label='EOLPage', uuid=name + '_eol_page', from_uuid=name, connect_labels=('eol_page', 'eol_page'))
 
