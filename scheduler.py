@@ -47,7 +47,7 @@ def fetch(module_name):
 
 def module_runner(module_name, serialize_queue, batch_file):
     module = fetch(module_name)
-    
+
     if batch_file is None:
         gen = module.process()
     else:
@@ -136,9 +136,4 @@ class Scheduler:
                                 self.waiting.append(dep_proc)
             else:
                 break
-        if not self.driver_process.is_alive():
-            return True
-        # print(len(self.workers),      self.schedule_queue.qsize(), self.indep_serialize_queue.qsize(), self.serialize_queue.qsize(), self.transaction_queue.qsize(), flush=True)
-        if len(self.workers) == 0 and self.serialize_queue.empty() and self.indep_serialize_queue.empty() and self.transaction_queue.empty():
-            return True
         return False
