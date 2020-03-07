@@ -31,18 +31,13 @@ class Driver():
             id2 = transaction.uuid
             if transaction.data is not None:
                 if id2 in self.hset:
-                    print(id2)
-                    1/0
                     return False
                 self.hset.add(id2)
                 self.add(transaction.data, transaction.out_label)
-            print(id1, transaction.connect_labels, flush=True)
             if id1 is not None and transaction.connect_labels is not None:
                 id1 = str(id1)
                 key = str(id1) + str(id2)
                 if key in self.lset:
-                    print(key)
-                    1/0
                     return False
                 self.lset.add(key)
                 with self.neo_client.session() as session:
@@ -51,11 +46,9 @@ class Driver():
 
     def link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
         query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\' MERGE (n)-[:{from_label}]->(m) MERGE (m)-[:{to_label}]->(n)'.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2, from_label=from_label, to_label=to_label))
-        print(query, flush=True)
         tx.run(query)
 
     def add(self, data, label):
-        print('Adding ', label)
         with self.neo_client.session() as session:
             session.write_transaction(add_json_node, label, data)
 
@@ -81,7 +74,6 @@ def driver_listener(transaction_queue):
         batch = Batch()
         batch.load(batch_file)
         for transaction in batch.items:
-            print(transaction, flush=True)
             try:
                 added = driver.run(transaction)
                 duration = time() - start
@@ -89,14 +81,8 @@ def driver_listener(transaction_queue):
                 print('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)), flush=True)
                 if added:
                     i += 1
-                    print(i, flush=True)
             except KeyboardInterrupt:
                 raise KeyboardInterrupt
             except Exception as e:
                 print(e, flush=True)
-                print(transaction.in_label, flush=True)
-                print(transaction.out_label, flush=True)
-                print(transaction.uuid, flush=True)
-                print(transaction.from_uuid, flush=True)
-                print(transaction.data, flush=True)
-
+                print(transaction, flush=True)
