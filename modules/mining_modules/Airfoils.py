@@ -2,6 +2,7 @@ import glob
 import os
 import time
 import random
+from pprint import pprint
 from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
@@ -9,73 +10,73 @@ from bs4 import BeautifulSoup
 
 from ..utils.module import Module
 
-airfoil_tools = "http://airfoiltools.com"
-airfoil_search_url="http://airfoiltools.com/search/airfoils"
-
-# Airfoil helper functions:
+TOOLS_URL  = "http://airfoiltools.com"
+SEARCH_URL = "http://airfoiltools.com/search/airfoils"
 
 def scrape_airfoil_list():
-    raw_html = get(airfoil_search_url).content
+    raw_html = get(SEARCH_URL).content
     html = BeautifulSoup(raw_html, 'html.parser')
     airfoilURLList = html.findAll("table", {"class": "listtable"})
     tableRows = airfoilURLList[0].findAll("tr")
-    airfoil_urls = []
-    airfoil_names = []
+    urls = []
+    names = []
     for row in tableRows: # Search through all tables 
         airfoil_link = row.find(lambda tag: tag.name=="a" and tag.has_attr('href'))
         if (airfoil_link):
-            airfoil_urls.append(airfoil_tools + airfoil_link['href'])
-            airfoil_names.append(airfoil_link.text.replace("\\", "_").replace("/","_"))
-    return airfoil_urls,airfoil_names
+            urls.append(TOOLS_URL + airfoil_link['href'])
+            names.append(airfoil_link.text.replace("\\", "_").replace("/","_"))
+    return zip(urls, names)
 
-def scrape_airfoil_coords(airfoil_page,airfoilname):    
-    lednicerDAT=airfoil_page.replace("details","lednicerdatfile")
-    raw_html=get(lednicerDAT,True).content
-    soup=BeautifulSoup(raw_html,'lxml')    
-    with open('./scrape/{}.txt'.format(airfoilname), mode='wt', encoding='utf-8') as file:
-        file.write(soup.text)
+def parse_detail_lines(lines):
+    details = dict()
 
-def scrape_details(details_page,airfoil_name,Re,Ncrit):
+    xtrf_cells = lines[0].split()
+    details['xtrf_top']    = float(xtrf_cells[2])
+    details['xtrf_bottom'] = float(xtrf_cells[4])
+
+    regime_cells = lines[1].split()
+    details['mach'] = float(regime_cells[2])
+
+    column_names = lines[3].split()
+    column_dicts = {k : [] for k in column_names}
+    for line in lines[5:]:
+        for key, cell in zip(column_names, line.split()):
+            column_dicts[key].append(float(cell))
+    details['data'] = column_dicts
+    return details
+
+def parse_details(details_page,name):
     raw_html=get(details_page).content
     html = BeautifulSoup(raw_html, 'html.parser')
     details_table = html.findAll("table", {"class": "details"})
     table_links = details_table[0].findAll("a")
     polar = table_links[2]['href']
-    raw_html2 = get(airfoil_tools + polar,True).content
-    with open('./scrape/{}.txt'.format(airfoil_name+"_polar_"+str(Re)+"_"+str(Ncrit)), mode='w') as file:
-        file.write(raw_html2.decode('utf-8'))
+    polar_html = get(TOOLS_URL + polar,True).content.decode('utf-8')
+    lines = polar_html.split('\n')[7:]
+    return parse_detail_lines(lines)
 
-def scrape_airfoil_polars(airfoil_page,airfoil_name):    
-    raw_html=get(airfoil_page).content
-    html = BeautifulSoup(raw_html, 'html.parser')
+def parse_airfoil(url, name):    
+    details = []
+    html = BeautifulSoup(get(url).content, 'html.parser')
     polar_list = html.findAll("table", {"class": "polar"})
-    tableRows = polar_list[0].findAll("tr")
-    for row in tableRows: # Search through all rows
-        columns = row.findAll("td")
-        if (columns):
-            if (len(columns)>4):
-                Re = float(columns[2].text.replace(',',''))
-                Ncrit = float(columns[3].text.replace(',',''))
-                dataLink = columns[7].find(lambda tag: tag.name=="a" and tag.has_attr('href'))
-                dataLink = dataLink['href']
-                details_page = airfoil_tools + dataLink
-                scrape_details(details_page,airfoil_name,Re,Ncrit)
+    for row in polar_list[0].findAll('tr'): # Search through all rows
+        columns = row.findAll('td')
+        if (columns) and (len(columns)>4):
+            Re    = float(columns[2].text.replace(',',''))
+            Ncrit = float(columns[3].text.replace(',',''))
+            data_link = columns[7].find(lambda tag: tag.name=="a" and tag.has_attr('href'))
+            details_page = TOOLS_URL + data_link['href']
+            details.append((parse_details(details_page, name), Re, Ncrit))
+    return details
 
 class Airfoils(Module):
-    '''
-    '''
     def __init__(self, in_label=None, out_label='Airfoil', connect_labels=None, name='Airfoils'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
     def process(self):
-        airfoil_urls, airfoil_names = scrape_airfoil_list()
-        l = len(airfoil_names)
-        for i in range(0,len(airfoil_urls)):
-            # print('{}/{}'.format(i, l), flush=True)
-            # # Check if airfoil is already scraped 
-            # if not os.path.isfile('scrape/' + airfoil_names[i] + ".txt"):
-            #     scrape_airfoil_coords(airfoil_urls[i],airfoil_names[i])
-            #     scrape_airfoil_polars(airfoil_urls[i],airfoil_names[i])
-            yield self.default_transaction({'name' : airfoil_names[i]})
+        for url, name in scrape_airfoil_list():
+            details = parse_airfoil(url, name)
+            yield self.default_transaction({'name' : names[i], 'coords' : coords, 'details' : ''}) # details})
+            break
 
         

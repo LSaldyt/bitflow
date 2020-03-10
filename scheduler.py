@@ -88,7 +88,6 @@ class Scheduler:
 
     def schedule(self, module_name):
         in_label, out_label = self.get_type_signature(module_name)
-        print(module_name, in_label, out_label, flush=True)
         if in_label is None:
             print('Starting ', module_name, flush=True)
             self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None))))
