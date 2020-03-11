@@ -1,5 +1,5 @@
 from ..utils.OnlineLearner import OnlineLearner
-from ..libraries.efficient_net.species_model import SpeciesModel
+from ..libraries.efficient_net.hierarchical_model import HierarchicalModel
 
 import torch
 import torch.nn as nn
@@ -12,7 +12,7 @@ from PIL import Image
 
 import os
 
-class SpeciesClassifier(OnlineLearner):
+class TaxonClassifier(OnlineLearner):
     '''
     Classify species using a convolutional neural network
     '''
