@@ -94,5 +94,7 @@ class Airfoils(Module):
                 with open('data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit']), 'wb') as outfile:
                     pickle.dump(detail_page.pop('data'), outfile)
                 yield self.default_transaction({'name' : name, 'coord_file' : coord_file, **detail_page})
+                break
+            break
 
         

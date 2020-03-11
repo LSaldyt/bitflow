@@ -23,7 +23,7 @@ class AirfoilRegressor(OnlineLearner):
         self.index  = 0
 
     def init_model(self):
-        self.model = AirfoilModel()
+        self.model = AirfoilModel(105, 106)
 
     def save(self):
         torch.save(self.model.state_dict(), self.filename)
