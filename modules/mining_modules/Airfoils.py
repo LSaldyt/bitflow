@@ -1,7 +1,9 @@
 import glob
 import os
 import time
+import pickle
 import random
+from uuid import uuid4
 from pprint import pprint
 from requests import get
 from requests.exceptions import RequestException
@@ -26,6 +28,14 @@ def scrape_airfoil_list():
             urls.append(TOOLS_URL + airfoil_link['href'])
             names.append(airfoil_link.text.replace("\\", "_").replace("/","_"))
     return zip(urls, names)
+
+def scrape_airfoil_coords(page, name):
+    lednicerDAT = page.replace("details","lednicerdatfile")
+    raw_html = get(lednicerDAT,True).content
+    soup = BeautifulSoup(raw_html,'lxml')
+    with open('data/airfoil_data/{}_coords.txt'.format(name), 'w', encoding='utf-8') as outfile:
+        outfile.write(soup.text)
+    return name + '_coords.txt'
 
 def parse_detail_lines(lines):
     details = dict()
@@ -66,7 +76,10 @@ def parse_airfoil(url, name):
             Ncrit = float(columns[3].text.replace(',',''))
             data_link = columns[7].find(lambda tag: tag.name=="a" and tag.has_attr('href'))
             details_page = TOOLS_URL + data_link['href']
-            details.append((parse_details(details_page, name), Re, Ncrit))
+            details_dict = parse_details(details_page, name)
+            details_dict['Re']    = Re
+            details_dict['Ncrit'] = Ncrit
+            details.append(details_dict)
     return details
 
 class Airfoils(Module):
@@ -75,8 +88,11 @@ class Airfoils(Module):
 
     def process(self):
         for url, name in scrape_airfoil_list():
-            details = parse_airfoil(url, name)
-            yield self.default_transaction({'name' : names[i], 'coords' : coords, 'details' : ''}) # details})
-            break
+            details    = parse_airfoil(url, name)
+            coord_file = scrape_airfoil_coords(url, name)
+            for detail_page in details:
+                with open('data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit']), 'wb') as outfile:
+                    pickle.dump(detail_page.pop('data'), outfile)
+                yield self.default_transaction({'name' : name, 'coord_file' : coord_file, **detail_page})
 
         
