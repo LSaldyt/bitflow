@@ -1,6 +1,8 @@
 from ..utils.OnlineLearner import OnlineLearner
 from ..libraries.airfoil_regression.airfoil_model import AirfoilModel
 
+import pickle
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,7 +16,7 @@ class AirfoilRegressor(OnlineLearner):
     '''
     Classify species using a convolutional neural network
     '''
-    def __init__(self, filename='data/models/species_classifier.nn'):
+    def __init__(self, filename='data/models/airfoil_regressor.nn'):
         OnlineLearner.__init__(self, in_label='Airfoil', name='AirfoilRegressor', filename=filename)
         self.init_model()
         self.criterion = nn.CrossEntropyLoss()
@@ -40,3 +42,14 @@ class AirfoilRegressor(OnlineLearner):
     def learn(self, node):
         print('Running airfoil regressor on:')
         print(node, flush=True)
+
+        coord_file  = node.data['coord_file']
+        detail_file = node.data['detail_file']
+
+        with open(coord_file, 'r') as infile:
+            coordinates = infile.read()
+        with open(detail_file, 'rb') as infile:
+            details = pickle.load(infile)
+
+        print(details, flush=True)
+

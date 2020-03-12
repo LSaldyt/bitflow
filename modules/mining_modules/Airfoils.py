@@ -33,9 +33,10 @@ def scrape_airfoil_coords(page, name):
     lednicerDAT = page.replace("details","lednicerdatfile")
     raw_html = get(lednicerDAT,True).content
     soup = BeautifulSoup(raw_html,'lxml')
-    with open('data/airfoil_data/{}_coords.txt'.format(name), 'w', encoding='utf-8') as outfile:
+    coord_file = 'data/airfoil_data/' + name + '_coords.txt'
+    with open(coord_file, 'w', encoding='utf-8') as outfile:
         outfile.write(soup.text)
-    return name + '_coords.txt'
+    return coord_file
 
 def parse_detail_lines(lines):
     details = dict()
@@ -91,10 +92,7 @@ class Airfoils(Module):
             details    = parse_airfoil(url, name)
             coord_file = scrape_airfoil_coords(url, name)
             for detail_page in details:
-                with open('data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit']), 'wb') as outfile:
+                detail_file = 'data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit'])
+                with open(detail_file, 'wb') as outfile:
                     pickle.dump(detail_page.pop('data'), outfile)
-                yield self.default_transaction({'name' : name, 'coord_file' : coord_file, **detail_page})
-                break
-            break
-
-        
+                yield self.default_transaction({'name' : name, 'detail_file': detail_file, 'coord_file' : coord_file, **detail_page})
