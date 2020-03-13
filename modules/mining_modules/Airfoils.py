@@ -33,9 +33,24 @@ def scrape_airfoil_coords(page, name):
     lednicerDAT = page.replace("details","lednicerdatfile")
     raw_html = get(lednicerDAT,True).content
     soup = BeautifulSoup(raw_html,'lxml')
-    coord_file = 'data/airfoil_data/' + name + '_coords.txt'
-    with open(coord_file, 'w', encoding='utf-8') as outfile:
-        outfile.write(soup.text)
+    coord_file = 'data/airfoil_data/' + name + '_coords.pkl'
+    lines = soup.text.split('\n')[3:]
+
+    in_first = True
+    first  = []
+    second = []
+    for line in lines:
+        pair = tuple(map(float, line.split()))
+        if line == '':
+            in_first = False
+            continue
+        if in_first:
+            first.append(pair)
+        else:
+            second.append(pair)
+
+    with open(coord_file, 'wb') as outfile:
+        pickle.dump((first, second), outfile)
     return coord_file
 
 def parse_detail_lines(lines):

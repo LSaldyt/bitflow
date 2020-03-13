@@ -25,7 +25,7 @@ class AirfoilRegressor(OnlineLearner):
         self.index  = 0
 
     def init_model(self):
-        self.model = AirfoilModel(105, 106)
+        self.model = AirfoilModel(420, 69)
 
     def save(self):
         torch.save(self.model.state_dict(), self.filename)
@@ -46,10 +46,11 @@ class AirfoilRegressor(OnlineLearner):
         coord_file  = node.data['coord_file']
         detail_file = node.data['detail_file']
 
-        with open(coord_file, 'r') as infile:
-            coordinates = infile.read()
+        with open(coord_file, 'rb') as infile:
+            coordinates = pickle.load(infile)
         with open(detail_file, 'rb') as infile:
             details = pickle.load(infile)
 
-        print(details, flush=True)
+        print(list(details.keys()), flush=True)
+        print(coordinates)
 
