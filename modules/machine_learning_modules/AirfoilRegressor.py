@@ -53,4 +53,5 @@ class AirfoilRegressor(OnlineLearner):
 
         print(list(details.keys()), flush=True)
         print(coordinates)
+        print(len(coordinates[0]))
 

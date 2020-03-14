@@ -10,7 +10,21 @@ from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
 
+from scipy import interpolate
+import matplotlib.pyplot as plt
+import numpy as np
+
 from ..utils.module import Module
+
+def interpolate_airfoil(coords):
+    x, y = zip(*coords)
+    s = interpolate.InterpolatedUnivariateSpline(x, y)
+    xnew = np.arange(0, 100) # From scipy docs
+    ynew = s(xnew)
+    plt.plot(*coords, xnew, ynew)
+    plt.legend(['Normal', 'Interpolated'])
+    plt.title('Airfoil Interpolation')
+    plt.show()
 
 TOOLS_URL  = "http://airfoiltools.com"
 SEARCH_URL = "http://airfoiltools.com/search/airfoils"
@@ -48,6 +62,9 @@ def scrape_airfoil_coords(page, name):
             first.append(pair)
         else:
             second.append(pair)
+    interpolate_airfoil(first)
+    interpolate_airfoil(second)
+    1/0
 
     with open(coord_file, 'wb') as outfile:
         pickle.dump((first, second), outfile)
