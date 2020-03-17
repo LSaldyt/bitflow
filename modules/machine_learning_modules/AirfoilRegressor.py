@@ -28,7 +28,7 @@ class AirfoilRegressor(OnlineLearner):
         self.index  = 0
 
     def init_model(self):
-        self.model = AirfoilModel(800 + 3 + 3, 4)
+        self.model = AirfoilModel(800 + 3 + 2, 4)
 
     def save(self):
         torch.save(self.model.state_dict(), self.filename)
@@ -52,12 +52,11 @@ class AirfoilRegressor(OnlineLearner):
             details = pickle.load(infile)
 
         mach  = node.data['mach']
-        Re    = node.data['Re']
+        # Re    = node.data['Re']
         Ncrit = node.data['Ncrit']
-        regime_vec = [mach, Re, Ncrit]
+        regime_vec = [mach, Ncrit] # Re, Ncrit]
 
-        print(details.keys(), flush=True)
-        coefficient_tuples = list(zip(details[k] for k in sorted(details.keys()) if k.startswith('C')))
+        coefficient_tuples = list(zip(*(details[k] for k in sorted(details.keys()) if k.startswith('C'))))
         alphas = details['alpha']
         limits = list(zip(details['Top_Xtr'], details['Bot_Xtr']))
 
@@ -67,8 +66,13 @@ class AirfoilRegressor(OnlineLearner):
         coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
-            inputs = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
-            print(inputs, flush=True)
+            coefficients = torch.Tensor(coefficients)
+            inputs       = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
+            # print(max(coordinates))
+            # print(alpha)
+            # print(max(regime_vec))
+            # print(top, bot)
+            # print(max(coefficients), flush=True)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
             loss = self.criterion(outputs, coefficients)

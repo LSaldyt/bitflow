@@ -123,10 +123,13 @@ class Airfoils(Module):
 
     def process(self):
         for url, name in scrape_airfoil_list():
-            details    = parse_airfoil(url, name)
-            coord_file = scrape_airfoil_coords(url, name)
-            for detail_page in details:
-                detail_file = 'data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit'])
-                with open(detail_file, 'wb') as outfile:
-                    pickle.dump(detail_page.pop('data'), outfile)
-                yield self.default_transaction({'name' : name, 'detail_file': detail_file, 'coord_file' : coord_file, **detail_page})
+            try:
+                details    = parse_airfoil(url, name)
+                coord_file = scrape_airfoil_coords(url, name)
+                for detail_page in details:
+                    detail_file = 'data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit'])
+                    with open(detail_file, 'wb') as outfile:
+                        pickle.dump(detail_page.pop('data'), outfile)
+                    yield self.default_transaction({'name' : name, 'detail_file': detail_file, 'coord_file' : coord_file, **detail_page})
+            except ValueError:
+                pass
