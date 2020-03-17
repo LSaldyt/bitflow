@@ -13,6 +13,7 @@ from torchvision import transforms
 from pprint import pprint
 
 import os
+import math
 
 class AirfoilRegressor(OnlineLearner):
     '''
@@ -28,7 +29,7 @@ class AirfoilRegressor(OnlineLearner):
         self.index  = 0
 
     def init_model(self):
-        self.model = AirfoilModel(800 + 3 + 2, 4)
+        self.model = AirfoilModel(800 + 3 + 3, 4)
 
     def save(self):
         torch.save(self.model.state_dict(), self.filename)
@@ -51,10 +52,12 @@ class AirfoilRegressor(OnlineLearner):
         with open(detail_file, 'rb') as infile:
             details = pickle.load(infile)
 
-        mach  = node.data['mach']
-        # Re    = node.data['Re']
-        Ncrit = node.data['Ncrit']
-        regime_vec = [mach, Ncrit] # Re, Ncrit]
+        signed_log = lambda x : 0 if x == 0 else math.copysign(math.log(abs(x)), x)
+
+        mach  = signed_log(node.data['mach'])
+        Re    = signed_log(node.data['Re'])
+        Ncrit = signed_log(node.data['Ncrit'])
+        regime_vec = [mach, Re, Ncrit]
 
         coefficient_tuples = list(zip(*(details[k] for k in sorted(details.keys()) if k.startswith('C'))))
         alphas = details['alpha']
