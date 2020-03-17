@@ -16,15 +16,18 @@ import numpy as np
 
 from ..utils.module import Module
 
-def interpolate_airfoil(coords):
+def interpolate_airfoil(coords, n=200, plot=False):
     x, y = zip(*coords)
     s = interpolate.InterpolatedUnivariateSpline(x, y)
-    xnew = np.arange(0, 100) # From scipy docs
+    xnew = np.linspace(min(x), max(x), n)
     ynew = s(xnew)
-    plt.plot(*coords, xnew, ynew)
-    plt.legend(['Normal', 'Interpolated'])
-    plt.title('Airfoil Interpolation')
-    plt.show()
+    if plot:
+        # plt.plot(*coords, xnew, ynew)
+        plt.plot(xnew, ynew)
+        # plt.legend(['Normal', 'Interpolated'])
+        plt.title('Airfoil Interpolation')
+        plt.show()
+    return xnew, ynew
 
 TOOLS_URL  = "http://airfoiltools.com"
 SEARCH_URL = "http://airfoiltools.com/search/airfoils"
@@ -62,12 +65,11 @@ def scrape_airfoil_coords(page, name):
             first.append(pair)
         else:
             second.append(pair)
-    interpolate_airfoil(first)
-    interpolate_airfoil(second)
-    1/0
+    fx, fy = interpolate_airfoil(first)
+    sx, sy = interpolate_airfoil(second)
 
     with open(coord_file, 'wb') as outfile:
-        pickle.dump((first, second), outfile)
+        pickle.dump((fx, sx, fy, sy), outfile)
     return coord_file
 
 def parse_detail_lines(lines):
