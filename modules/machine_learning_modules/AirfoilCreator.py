@@ -18,13 +18,12 @@ class AirfoilCreator(AirfoilRegressor):
     def init_model(self):
         self.model = AirfoilModel(4 + 3 + 3, 800) # Reverse of AirfoilRegressor's default
 
-    def learn(self, node):
+    def transform(self, node):
         coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
             inputs  = torch.Tensor(list(coefficients) + regime_vec + [top, bot, alpha])
             outputs = torch.Tensor(coordinates)
-            loss = self.step(inputs, outputs)
-            print('Creator loss: ', loss, flush=True)
+            yield inputs, outputs
 
 

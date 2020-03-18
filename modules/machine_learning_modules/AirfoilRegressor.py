@@ -1,4 +1,4 @@
-from ..utils.OnlineLearner import OnlineLearner
+from ..utils.OnlineTorchLearner import OnlineTorchLearner
 from ..libraries.airfoil_regression.airfoil_model import AirfoilModel
 
 import pickle
@@ -15,36 +15,21 @@ from pprint import pprint
 import os
 import math
 
-class AirfoilRegressor(OnlineLearner):
+class AirfoilRegressor(OnlineTorchLearner):
     '''
     Regress the performance of airfoil geometries
     Implements the `Module` interface, which requires a type signature and process() function.
-    The `OnlineLearner` class is defined in `utils`, and specifies common operations of online machine learning models
-    To inherit from this class, AirfoilRegressor must specify `init_model`, and `learn` and potentially `save` and `load` (unless pickling self.model is enough).
+    The `OnlineTorchLearner` class is defined in `utils`, and specifies common operations of online machine learning models
+    To inherit from this class, AirfoilRegressor must specify `init_model`, and `transform`.
     Also, a filename can be specified to the parent constructor to specify where the model is saved.
     '''
     def __init__(self, filename='data/models/airfoil_regressor.nn'):
         # Take Airfoils as input, and produce no outputs.
-        OnlineLearner.__init__(self, in_label='Airfoil', name='AirfoilRegressor', filename=filename)
-        # Criteria needs to be MSE or anything compatible with regression
-        self.criterion = nn.MSELoss()
-
-        self.optimizer = optim.SGD(self.model.parameters(), lr=0.0001, momentum=0.9) # TODO: Change me later!
+        optimizer_kwargs = dict(lr=0.0001, momentum=0.9)
+        OnlineTorchLearner.__init__(self, nn.MSELoss(), optim.SGD, optimizer_kwargs, in_label='Airfoil', name='AirfoilRegressor', filename=filename)
 
     def init_model(self):
         self.model = AirfoilModel(800 + 3 + 3, 4)
-
-    def save(self):
-        torch.save(self.model.state_dict(), self.filename)
-
-    def load(self):
-        try:
-            self.model.load_state_dict(torch.load(self.filename)) # Takes roughly .15s
-        except RuntimeError:
-            backup = self.filename + '.bak'
-            if os.path.isfile(backup):
-                os.remove(backup) # Removes old backup!
-            os.rename(self.filename, backup)
 
     def read_node(self, node):
         coord_file  = node.data['coord_file']
@@ -68,21 +53,10 @@ class AirfoilRegressor(OnlineLearner):
 
         return coordinates, coefficient_tuples, alphas, limits, regime_vec
 
-    def step(self, inputs, labels):
-        self.optimizer.zero_grad()
-        outputs = self.model(inputs)
-        loss = self.criterion(outputs, labels)
-        loss.backward()
-        self.optimizer.step()
-        return loss.item()
-
-    def learn(self, node):
+    def transform(self, node):
         coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
             coefficients = torch.Tensor(coefficients)
             inputs       = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
-            loss = self.step(inputs, coefficients)
-            print('Regressor loss: ', loss, flush=True)
-
-
+            yield inputs, coefficients

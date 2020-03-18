@@ -7,8 +7,8 @@ class OnlineLearner(Module):
     A dynamic machine learning module that supports online learning
     A subclass of this class needs to define a function learn(batch), save(model, filename) and load(filename), and init_model() 
     '''
-    def __init__(self, in_label=None, name='OnlineLearner', filename=None):
-        Module.__init__(self, in_label=in_label, out_label=None, connect_labels=None, name=name)
+    def __init__(self, filename=None, **kwargs):
+        Module.__init__(self, **kwargs)
         self.filename = filename
         self.model = None
         self.init_model()

@@ -18,13 +18,11 @@ class AirfoilAngleRegressor(AirfoilRegressor):
     def init_model(self):
         self.model = AirfoilModel(4 + 3 + 2 + 800, 1) # Reverse of AirfoilRegressor's default
 
-    def learn(self, node):
+    def transform(self, node):
         coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
             inputs  = torch.Tensor(list(coefficients) + regime_vec + [top, bot] + coordinates)
             outputs = torch.Tensor([alpha])
-            loss = self.step(inputs, outputs)
-            print('Angle regressor: ', loss, flush=True)
-
+            yield inputs, outputs
 
