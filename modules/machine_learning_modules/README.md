@@ -3,7 +3,7 @@
 The PeTaL data pipeline separates modules into those used for machine learning, and those used for mining data directly.
 However, both modules implement the same interface, and are only separated for organization.
 The interface is simply a type signature (in terms of a `neo4j` label), and a `process()` function that operates on that label.
-Additionally, the machine learning modules commonly inherit from an `OnlineLearner` class, which defines common operations for online machine learning, for instance a save file where the model is dumped to periodically.
+Additionally, the machine learning modules commonly inherit from an `OnlineLearner` class, which defines common operations for online machine learning, for instance a save file where the model is dumped to periodically. Alternatively, the `OnlineTorchLearner` class can be used for pytorch-specific modules.
 
 Typically, a machine learning module will only define an input, for instance `Image -> None` as a type signature.
 Of course, it is possible to define any type signature.
