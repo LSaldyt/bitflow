@@ -17,12 +17,18 @@ import math
 
 class AirfoilRegressor(OnlineLearner):
     '''
-    Classify species using a convolutional neural network
+    Regress the performance of airfoil geometries
+    Implements the `Module` interface, which requires a type signature and process() function.
+    The `OnlineLearner` class is defined in `utils`, and specifies common operations of online machine learning models
+    To inherit from this class, AirfoilRegressor must specify `init_model`, and `learn` and potentially `save` and `load` (unless pickling self.model is enough).
+    Also, a filename can be specified to the parent constructor to specify where the model is saved.
     '''
     def __init__(self, filename='data/models/airfoil_regressor.nn'):
+        # Take Airfoils as input, and produce no outputs.
         OnlineLearner.__init__(self, in_label='Airfoil', name='AirfoilRegressor', filename=filename)
-        self.init_model()
+        # Criteria needs to be MSE or anything compatible with regression
         self.criterion = nn.MSELoss()
+
         self.optimizer = optim.SGD(self.model.parameters(), lr=0.0001, momentum=0.9) # TODO: Change me later!
 
     def init_model(self):
