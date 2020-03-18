@@ -22,11 +22,8 @@ class AirfoilRegressor(OnlineLearner):
     def __init__(self, filename='data/models/airfoil_regressor.nn'):
         OnlineLearner.__init__(self, in_label='Airfoil', name='AirfoilRegressor', filename=filename)
         self.init_model()
-        # self.criterion = nn.CrossEntropyLoss()
         self.criterion = nn.MSELoss()
-        self.optimizer = optim.SGD(self.model.parameters(), lr=0.001, momentum=0.9) # TODO: Change me later!
-        self.labels = dict()
-        self.index  = 0
+        self.optimizer = optim.SGD(self.model.parameters(), lr=0.0001, momentum=0.9) # TODO: Change me later!
 
     def init_model(self):
         self.model = AirfoilModel(800 + 3 + 3, 4)
@@ -65,22 +62,21 @@ class AirfoilRegressor(OnlineLearner):
 
         return coordinates, coefficient_tuples, alphas, limits, regime_vec
 
+    def step(self, inputs, outputs):
+        self.optimizer.zero_grad()
+        outputs = self.model(inputs)
+        loss = self.criterion(outputs, coefficients)
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
+
     def learn(self, node):
         coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
             coefficients = torch.Tensor(coefficients)
             inputs       = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
-            # print(max(coordinates))
-            # print(alpha)
-            # print(max(regime_vec))
-            # print(top, bot)
-            # print(max(coefficients), flush=True)
-            self.optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = self.criterion(outputs, coefficients)
-            loss.backward()
-            self.optimizer.step()
-            print('Loss: ', loss.item(), flush=True)
+            loss = self.step(inputs, coefficients)
+            print('Regressor loss: ', loss, flush=True)
 
 
