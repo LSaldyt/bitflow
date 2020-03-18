@@ -62,10 +62,10 @@ class AirfoilRegressor(OnlineLearner):
 
         return coordinates, coefficient_tuples, alphas, limits, regime_vec
 
-    def step(self, inputs, outputs):
+    def step(self, inputs, labels):
         self.optimizer.zero_grad()
         outputs = self.model(inputs)
-        loss = self.criterion(outputs, coefficients)
+        loss = self.criterion(outputs, labels)
         loss.backward()
         self.optimizer.step()
         return loss.item()
