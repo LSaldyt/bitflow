@@ -97,7 +97,10 @@ from time import sleep
 import shutil, os
 
 CUSTOM_IMPORT_DIR = '../../../../../../../.Neo4jDesktop/neo4jDatabases/database-b91ac8a8-e7bf-46a0-9651-1e7b068e5919/installation-3.5.14/import/'
+
 CUSTOM_IMPORT_DIR = '../../../../../../../.Neo4jDesktop/neo4jDatabases/database-96095927-f047-445d-8ce8-b4b05024bc48/installation-3.5.14/import/'
+
+CUSTOM_IMPORT_DIR = '../../../../../.Neo4jDesktop/neo4jDatabases/database-956b6711-76c3-46c6-80aa-4f335d68b2f8/installation-3.5.14/import/'
 
 def main():
     if not os.path.isfile('catalog.csv') or not os.path.isfile('relations.csv'):
