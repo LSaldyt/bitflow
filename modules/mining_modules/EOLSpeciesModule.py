@@ -25,7 +25,7 @@ class EOLSpeciesModule(Module):
                     properties = {k : v if v is not None else 'None' for k, v in properties.items()}
                     if name is not None:
                         yield self.custom_transaction(data=properties, in_label='Taxon', out_label='EOLPage', uuid=name + '_eol_page', from_uuid=name, connect_labels=('eol_page', 'eol_page'))
-                        # yield self.query_transaction('MATCH (t:Taxon {name:\'' + name + '\'}) SET t.eol_page = \'' + str(properties['page_id']) + '\' RETURN t')
+                        yield self.query_transaction('MATCH (t:Taxon {name:\'' + name + '\'}) SET t.eol_page = \'' + str(properties['page_id']) + '\' RETURN t')
                 skip += page_size
             except KeyError as e:
                 pass
