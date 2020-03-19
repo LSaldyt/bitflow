@@ -9,7 +9,7 @@ class OnlineTorchLearner(OnlineLearner):
         OnlineLearner.__init__(self, in_label=in_label, out_label=out_label, name=name, filename=filename)
         # Criteria needs to be MSE or anything compatible with regression
         self.criterion = criterion
-        self.optimizer = optimizer(**optimizer_kwargs)
+        self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
 
     def step(self, inputs, labels):
         self.optimizer.zero_grad()

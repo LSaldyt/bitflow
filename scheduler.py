@@ -1,13 +1,14 @@
 from multiprocessing import Process, Queue, Pool, Manager
 from queue import Empty
 from collections import defaultdict
-from importlib import import_module
 from time import sleep, time
 from uuid import uuid4
 from pprint import pprint
 
 from driver import driver_listener
 from batch import Batch
+
+from utils.utils import fetch
 
 def save_batch(schedule_queue, transaction_queue, label, batch):
     filename = 'data/batches/{}'.format(uuid4())
@@ -38,12 +39,6 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         duration = time() - start
         i += 1
 
-def fetch(module_name):
-    try:
-        module = import_module('modules.mining_modules.{}'.format(module_name))
-    except:
-        module = import_module('modules.machine_learning_modules.{}'.format(module_name))
-    return getattr(module, module_name)()
 
 def module_runner(module_name, serialize_queue, batch_file):
     module = fetch(module_name)
