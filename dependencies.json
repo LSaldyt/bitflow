@@ -1,1 +1,86 @@
-{"AirfoilAngleRegressor": ["Airfoil", null], "AirfoilCreator": ["Airfoil", null], "AirfoilRegressor": ["Airfoil", null], "TaxonClassifier": ["Image", null], "TopicLDAModule": ["Article", null], "Airfoils": [null, "Airfoil"], "CatalogueOfLife": [null, "Species:Taxon"], "DependentTestModule": ["TestOutput", "DependentTestOutput"], "DownloadedWikipediaModule": [null, "WikipediaPage"], "EOLImageModule": ["EOLPage", "EOLImage:Image"], "EOLModule": ["Species", "EOLData"], "EOLSpeciesModule": [null, "EOLPage"], "GoogleScholarModule": ["Species", "GoogleArticle:Article"], "HighwireModule": [null, "HighwireArticle:Article"], "ImageModule": [null, null], "IndependentTestModule": [null, "TestOutput"], "JEBModule": ["Species", "JEBArticle:Article"], "MockEOLSpeciesModule": [null, "EOLPage"], "TestingModule": [null, "Species"], "WikipediaImageModule": ["WikipediaArticle", "Image"], "WikipediaModule": ["Species", "WikipediaArticle:Article"]}
+{
+    "AirfoilAngleRegressor": [
+        "Airfoil",
+        null
+    ],
+    "AirfoilCreator": [
+        "Airfoil",
+        null
+    ],
+    "AirfoilRegressor": [
+        "Airfoil",
+        null
+    ],
+    "TaxonClassifier": [
+        "Image",
+        null
+    ],
+    "TopicLDAModule": [
+        "Article",
+        null
+    ],
+    "Airfoils": [
+        null,
+        "Airfoil"
+    ],
+    "CatalogueOfLife": [
+        null,
+        "Species:Taxon"
+    ],
+    "DependentTestModule": [
+        "TestOutput",
+        "DependentTestOutput"
+    ],
+    "DownloadedWikipediaModule": [
+        null,
+        "WikipediaPage"
+    ],
+    "EOLImageModule": [
+        "EOLPage",
+        "EOLImage:Image"
+    ],
+    "EOLModule": [
+        "Species",
+        "EOLData"
+    ],
+    "EOLSpeciesModule": [
+        null,
+        "EOLPage"
+    ],
+    "GoogleScholarModule": [
+        "Species",
+        "GoogleArticle:Article"
+    ],
+    "HighwireModule": [
+        null,
+        "HighwireArticle:Article"
+    ],
+    "ImageModule": [
+        null,
+        null
+    ],
+    "IndependentTestModule": [
+        null,
+        "TestOutput"
+    ],
+    "JEBModule": [
+        "Species",
+        "JEBArticle:Article"
+    ],
+    "MockEOLSpeciesModule": [
+        null,
+        "EOLPage"
+    ],
+    "TestingModule": [
+        null,
+        "Species"
+    ],
+    "WikipediaImageModule": [
+        "WikipediaArticle",
+        "Image"
+    ],
+    "WikipediaModule": [
+        "Species",
+        "WikipediaArticle:Article"
+    ]
+}

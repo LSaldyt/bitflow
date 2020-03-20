@@ -13,7 +13,7 @@ def fetch(module_name):
     except ModuleNotFoundError:
         for subdir in get_module_subdirs():
             try:
-                print('modules.{}.{}'.format(subdir, module_name))
+                # print('modules.{}.{}'.format(subdir, module_name))
                 module = import_module('modules.{}.{}'.format(subdir, module_name))
                 break
             except ModuleNotFoundError:

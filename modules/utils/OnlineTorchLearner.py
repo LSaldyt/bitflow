@@ -1,5 +1,15 @@
 from .OnlineLearner import OnlineLearner
 
+import os
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils import data
+from torchvision import transforms
+
+from time import sleep
+
 class OnlineTorchLearner(OnlineLearner):
     '''
     Base class for pytorch machine learning modules
@@ -36,6 +46,9 @@ class OnlineTorchLearner(OnlineLearner):
             if os.path.isfile(backup):
                 os.remove(backup) # Removes old backup!
             os.rename(self.filename, backup)
+        except PermissionError:
+            sleep(1)
+            self.load()
 
     def learn(self, node):
         for inputs, labels in self.transform(node):

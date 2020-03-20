@@ -1,4 +1,4 @@
-from ..utils.OnlineLearner import OnlineLearner
+from ..utils.OnlineTorchLearner import OnlineTorchLearner
 from ..libraries.hierarchical_classifier.hierarchical_model import HierarchicalModel
 
 import torch
@@ -12,17 +12,13 @@ from PIL import Image
 
 import os
 
-class TaxonClassifier(OnlineLearner):
+class TaxonClassifier(OnlineTorchLearner):
     '''
-    Classify species using a convolutional neural network
+    Classify taxa using a convolutional neural network
     '''
-    def __init__(self, filename='data/models/species_classifier.nn'):
-        OnlineLearner.__init__(self, in_label='Image', name='SpeciesClassifier', filename=filename)
+    def __init__(self, filename='data/models/taxon_classifier.nn'):
+        OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.0001, momentum=0.9), in_label='Image', name='SpeciesClassifier', filename=filename)
         self.init_model()
-        self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.SGD(self.model.parameters(), lr=0.001, momentum=0.9) # TODO: Change me later!
-        self.labels = dict()
-        self.index  = 0
 
     def load_image(self, filename):
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(),
@@ -34,40 +30,33 @@ class TaxonClassifier(OnlineLearner):
     def init_model(self):
         self.model = HierarchicalModel()
 
-    def save(self):
-        torch.save(self.model.state_dict(), self.filename)
+    def transform(self, node):
+        print('TaxonClassifier:', node, flush=True)
+        return []
+    # def learn(self, node):
+    #     print('TaxonClassifier:', node, flush=True)
+    #     return
+    #     try:
+    #         species  = node['parent']
+    #         filename = node['filename']
+    #         image    = self.load_image(filename)
+    #         
+    #         if species in self.labels:
+    #             labels = self.labels[species]
+    #         else:
+    #             labels = self.index
+    #             self.labels[species] = self.index
+    #             self.index += 1
 
-    def load(self):
-        try:
-            self.model.load_state_dict(torch.load(self.filename)) # Takes roughly .15s
-        except RuntimeError:
-            backup = self.filename + '.bak'
-            if os.path.isfile(backup):
-                os.remove(backup) # Removes old backup!
-            os.rename(self.filename, backup)
+    #         labels = torch.tensor([labels], dtype=torch.long)
+    #         inputs = image.squeeze(dim=1)
 
-    def learn(self, node):
-        try:
-            species  = node['parent']
-            filename = node['filename']
-            image    = self.load_image(filename)
-            
-            if species in self.labels:
-                labels = self.labels[species]
-            else:
-                labels = self.index
-                self.labels[species] = self.index
-                self.index += 1
-
-            labels = torch.tensor([labels], dtype=torch.long)
-            inputs = image.squeeze(dim=1)
-
-            self.optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = self.criterion(outputs, labels)
-            loss.backward()
-            self.optimizer.step()
-        except RuntimeError:
-            pass
-        except OSError:
-            pass
+    #         self.optimizer.zero_grad()
+    #         outputs = self.model(inputs)
+    #         loss = self.criterion(outputs, labels)
+    #         loss.backward()
+    #         self.optimizer.step()
+    #     except RuntimeError:
+    #         pass
+    #     except OSError:
+    #         pass
