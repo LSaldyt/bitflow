@@ -48,7 +48,7 @@ class OnlineTorchLearner(OnlineLearner):
             os.rename(self.filename, backup)
         except PermissionError:
             sleep(1)
-            self.load()
+            # self.load()
 
     def learn(self, node):
         for inputs, labels in self.transform(node):
