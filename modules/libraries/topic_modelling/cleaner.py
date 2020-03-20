@@ -9,7 +9,11 @@ from .contractions import fix_word as expand_contractions
 
 class Cleaner:
     def __init__(self):
-        self.stop_words = set(stopwords.words('english'))
+        try:
+            self.stop_words = set(stopwords.words('english'))
+        except LookupError:
+            import nltk
+            nltk.download('stopwords')
         self.stemmer    = PorterStemmer()
 
     def tokenize(self, text):
