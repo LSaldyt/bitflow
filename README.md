@@ -1,8 +1,9 @@
 # Data Mining
 
+This repository defines data mining functionality for PeTaL, including the creation of the species catalog
+
 ## Extending Mining Capability
 
-This module defines data mining functionality for PeTaL.
 Essentially, this functionality is set up by creating modules in the `Module` folder.
 A module is defined by a type signature (type in) -> (type out, label from, label to) and a process(node : type in) function which creates a list of Transaction() objects from (type in) nodes.
 Here, "types" are neo4j labels. See `modules/WikipediaModule.py` for a concrete and well documented example, and also see `modules/module.py` for the base class to derive from.

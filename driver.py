@@ -14,12 +14,10 @@ class Driver():
     '''
     An API providing a lightweight connection to neo4j
     '''
-    def __init__(self,):
-        # self.neo_client = GraphDatabase.driver("localhost:7474/browser/", auth=basic_auth("neo4j", "life"), encrypted=False)
-        # self.neo_client = GraphDatabase.driver("bolt://139.88.179.199:7687", auth=basic_auth("neo4j", "testing"), encrypted=False)
-        # self.neo_client = GraphDatabase.driver("bolt://localhost:7687", auth=basic_auth("neo4j", "life"), encrypted=False)
-        # self.neo_client = GraphDatabase.driver("bolt://localhost:6969", auth=basic_auth("neo4j", "life"))
-        self.neo_client = GraphDatabase.driver("bolt://localhost:7687", auth=basic_auth("neo4j", "life"), encrypted=False)
+    def __init__(self):
+        with open('settings.json', 'r') as infile:
+            settings = json.load(infile)
+        self.neo_client = GraphDatabase.driver(settings["neo4j_server"], auth=basic_auth(settings["username"], settings["password"]), encrypted=settings["encrypted"])
         self.hset = set()
         self.lset = set()
 
