@@ -4,7 +4,7 @@ from ..libraries.encyclopedia_of_life.eol_api import EOL_API
 import requests
 
 class EOLSpeciesModule(Module):
-    def __init__(self, in_label=None, out_label='EOLPage', connect_labels=None, name='EOLSpecies', count=1900000):
+    def __init__(self, in_label=None, out_label='EOLPage', connect_labels=('eol_page', 'eol_page'), name='EOLSpecies', count=1900000):
         Module.__init__(self, in_label, out_label, connect_labels, name, count)
 
     def process(self):
@@ -24,8 +24,7 @@ class EOLSpeciesModule(Module):
                     name = properties['canonical']
                     properties = {k : v if v is not None else 'None' for k, v in properties.items()}
                     if name is not None:
-                        yield self.custom_transaction(data=properties, in_label='Taxon', out_label='EOLPage', uuid=name + '_eol_page', from_uuid=name, connect_labels=('eol_page', 'eol_page'))
-                        yield self.query_transaction('MATCH (t:Taxon {name:\'' + name + '\'}) SET t.eol_page = \'' + str(properties['page_id']) + '\' RETURN t')
+                        yield self.custom_transaction(data=properties, in_label='Taxon', out_label='EOLPage', uuid=name + '_eol_page', from_uuid=name)
                 skip += page_size
             except KeyError as e:
                 pass

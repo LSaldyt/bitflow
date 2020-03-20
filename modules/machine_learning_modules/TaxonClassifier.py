@@ -17,7 +17,7 @@ class TaxonClassifier(OnlineTorchLearner):
     Classify taxa using a convolutional neural network
     '''
     def __init__(self, filename='data/models/taxon_classifier.nn'):
-        OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.0001, momentum=0.9), in_label='Image', name='SpeciesClassifier', filename=filename)
+        OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.0001, momentum=0.9), in_label='Image', name='TaxonClassifier', filename=filename)
         self.init_model()
 
     def load_image(self, filename):
@@ -33,6 +33,7 @@ class TaxonClassifier(OnlineTorchLearner):
     def transform(self, node):
         print('TaxonClassifier:', node, flush=True)
         return []
+
     # def learn(self, node):
     #     print('TaxonClassifier:', node, flush=True)
     #     return
