@@ -10,6 +10,8 @@ from batch import Batch
 
 from utils.utils import fetch
 
+import json
+
 def save_batch(schedule_queue, transaction_queue, label, batch):
     filename = 'data/batches/{}'.format(uuid4())
     batch.save(filename)
@@ -68,22 +70,12 @@ class Scheduler:
         self.workers           = []
         self.waiting           = []
         self.max_workers       = max_workers
-        self.dependencies      = dict()
-
-    def get_type_signature(self, module_name):
-        if module_name not in self.dependencies:
-            return None, None
-        depends = self.dependencies[module_name]
-        in_label, out_label = depends["in"], depends["out"]
-        if in_label == 'None':
-            in_label = None
-        if out_label == 'None':
-            out_label = None
-        return in_label, out_label
+        with open('dependencies.json', 'r') as infile:
+            self.dependencies = json.load(infile)
 
     def schedule(self, module_name):
         print('Scheduling ', module_name, flush=True)
-        in_label, out_label = self.get_type_signature(module_name)
+        in_label, out_label = self.dependencies[module_name]
         if in_label is None:
             print('Starting ', module_name, flush=True)
             self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None))))

@@ -1,5 +1,5 @@
 from ..utils.OnlineLearner import OnlineLearner
-from ..libraries.efficient_net.hierarchical_model import HierarchicalModel
+from ..libraries.hierarchical_classifier.hierarchical_model import HierarchicalModel
 
 import torch
 import torch.nn as nn
@@ -32,7 +32,7 @@ class TaxonClassifier(OnlineLearner):
         return img
 
     def init_model(self):
-        self.model = SpeciesModel()
+        self.model = HierarchicalModel()
 
     def save(self):
         torch.save(self.model.state_dict(), self.filename)
