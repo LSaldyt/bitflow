@@ -55,7 +55,7 @@ class Driver():
         with self.neo_client.session() as session:
             records = list(session.run('MATCH (n) WHERE n.uuid = \'{uuid}\' RETURN n'.format(uuid=str(uuid))).records())
         if len(records) > 0:
-            return records[0]
+            return records[0]['n']
         else:
             raise ValueError('UUID {} invalid'.format(uuid))
 
@@ -77,7 +77,8 @@ def driver_listener(transaction_queue):
                 added = driver.run(transaction)
                 duration = time() - start
                 total = len(driver.hset) + len(driver.lset)
-                print('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)), flush=True)
+                print('Driver rate: {} of {} ({}|{})\r'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)), flush=True, end='')
+
                 if added:
                     i += 1
             except KeyboardInterrupt:

@@ -16,11 +16,14 @@ def create_dir():
     col_date = '2019-05-01' # Make sure this is a valid COL release
     if not os.path.isfile('data/.col_data/taxa.txt'):
         try:
+            print('Downloading catalogue of life data (~250mb)', flush=True)
             data = requests.get('http://www.catalogueoflife.org/DCA_Export/zip-fixed/{}-archive-complete.zip'.format(col_date))
             with open('col.zip', 'wb') as outfile:
                 outfile.write(data.content)
+            print('Done', flush=True)
             with zipfile.ZipFile('col.zip', 'r') as zip_handle:
                 zip_handle.extractall('data/.col_data')
+            print('Finished')
         except:
             if os.path.isfile('col.zip'):
                 os.remove('col.zip')
@@ -39,6 +42,7 @@ class CatalogueOfLife(Module):
         All that this function does is yield Transaction() objects which create Species() nodes in the neo4j database.
         This particular process() function is simply downloading a tab-separated file and parsing it.
         '''
+        print('Running catalog', flush=True)
         seen = set()
         create_dir() # Call the code above to download COL data if it isn't already present
         start = time()

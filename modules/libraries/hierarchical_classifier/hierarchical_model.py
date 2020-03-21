@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from torchvision import transforms
 
 class HierarchicalModel(nn.Module):
-    def __init__(self, i=0, genuses=2, species=68):
+    def __init__(self, i=0, outputs=1, width=1):
         nn.Module.__init__(self)
         if i < 0 or i > 7:
             raise ValueError('Parameter i to Efficient Net Model must be between 0 and 7 inclusive, but was: {}'.format(i))
@@ -24,17 +24,12 @@ class HierarchicalModel(nn.Module):
         self.feature_extractor = EfficientNetBase.from_pretrained('efficientnet-b{}'.format(i)) # Can go up to b7, with b0 having the least parameters, and b7 having the most (but more accuracy)
         self.fc1 = nn.Linear(1280 * 7 * 7, 1000)
         self.fc2 = nn.Linear(1000, 500)
-        self.genus_fc = nn.Linear(500, genuses)
-        self.species_fc = nn.Linear(500, species)
 
+        self.outputs = [nn.Linear(500, width) for _ in range(outputs)]
 
     def forward(self, x):
         x = self.feature_extractor.extract_features(x)
         x = x.view(1280 * 7 * 7)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        genuses = self.genus_fc(x)
-        species = self.species_fc(x)
-        genuses = genuses.unsqueeze(dim=0)
-        species = species.unsqueeze(dim=0)
-        return genuses, species
+        return tuple(final_layer(x) for final_layer in self.outputs)

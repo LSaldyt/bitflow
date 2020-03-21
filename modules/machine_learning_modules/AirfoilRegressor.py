@@ -26,7 +26,7 @@ class AirfoilRegressor(OnlineTorchLearner):
     def __init__(self, filename='data/models/airfoil_regressor.nn'):
         # Take Airfoils as input, and produce no outputs.
         optimizer_kwargs = dict(lr=0.0001, momentum=0.9)
-        OnlineTorchLearner.__init__(self, nn.MSELoss(), optim.SGD, optimizer_kwargs, in_label='Airfoil', name='AirfoilRegressor', filename=filename)
+        OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', name='AirfoilRegressor', filename=filename)
 
     def init_model(self):
         self.model = AirfoilModel(800 + 3 + 3, 4)

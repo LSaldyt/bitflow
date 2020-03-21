@@ -12,16 +12,22 @@ from PIL import Image
 
 import os
 
+TAXA = {'kingdom', 'phylum', 'class', 'order', 'superfamily', 'family', 'genus', 'subgenus', 'species'}
+
 class TaxonClassifier(OnlineTorchLearner):
     '''
     Classify taxa using a convolutional neural network
     '''
     def __init__(self, filename='data/models/taxon_classifier.nn'):
-        OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.0001, momentum=0.9), in_label='Image', name='TaxonClassifier', filename=filename)
+        OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.AdamW, dict(lr=0.01), in_label='Image', name='TaxonClassifier', filename=filename)
         self.init_model()
         self.driver = None
 
-    def load_image(self, filename):
+        self.label_map    = {taxa : {'' : 0} for taxa in TAXA} # Map empty str to 0
+        self.label_counts = {taxa : 1 for taxa in TAXA}
+
+    def load_image(self, node):
+        filename = node.data['filename']
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),]) # Explanation of these magic numbers??
         img = tfms(Image.open(filename))
@@ -29,20 +35,46 @@ class TaxonClassifier(OnlineTorchLearner):
         return img
 
     def init_model(self):
-        self.model = HierarchicalModel()
+        self.model = HierarchicalModel(outputs=len(TAXA), width=100)
+
+    def load_labels(self, node):
+        parent = self.driver.get(node.data['parent'])
+        name = parent['canonical']
+        taxon  = self.driver.get(name)
+        labels = []
+        for taxa in TAXA:
+            taxa_name = taxon[taxa]
+            sub_label_map = self.label_map[taxa]
+            if taxa_name not in sub_label_map:
+                sub_label_map[taxa_name] = self.label_counts[taxa]
+                self.label_counts[taxa] += 1
+            labels.append(torch.tensor([sub_label_map[taxa_name]], dtype=torch.long))
+        return labels
 
     def transform(self, node):
         print('TaxonClassifier:', node, flush=True)
-        parent = self.driver.get(node.data['parent'])
-        print(parent)
+        labels = self.load_labels(node)
+        image  = self.load_image(node)
+        yield image, labels
 
-        print(self.driver)
-        return []
+    def step(self, inputs, labels):
+        self.optimizer.zero_grad()
+        outputs = self.model(inputs)
+        loss = None
+        for output, label in zip(outputs, labels):
+            output = output.unsqueeze(dim=0)
+            if loss is None:
+                loss = self.criterion(output, label)
+            else:
+                loss += self.criterion(output, label)
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
 
     def learn(self, node):
         for inputs, labels in self.transform(node):
             loss = self.step(inputs, labels)
-            print('{} loss: '.format(name), loss, flush=True)
+            print('{} loss: '.format(self.name), loss, flush=True)
 
     def process(self, node, driver=None):
         if self.driver is None:
@@ -52,31 +84,3 @@ class TaxonClassifier(OnlineTorchLearner):
         self.learn(node)
         self.save()
         return []
-
-    # def learn(self, node):
-    #     print('TaxonClassifier:', node, flush=True)
-    #     return
-    #     try:
-    #         species  = node['parent']
-    #         filename = node['filename']
-    #         image    = self.load_image(filename)
-    #         
-    #         if species in self.labels:
-    #             labels = self.labels[species]
-    #         else:
-    #             labels = self.index
-    #             self.labels[species] = self.index
-    #             self.index += 1
-
-    #         labels = torch.tensor([labels], dtype=torch.long)
-    #         inputs = image.squeeze(dim=1)
-
-    #         self.optimizer.zero_grad()
-    #         outputs = self.model(inputs)
-    #         loss = self.criterion(outputs, labels)
-    #         loss.backward()
-    #         self.optimizer.step()
-    #     except RuntimeError:
-    #         pass
-    #     except OSError:
-    #         pass
