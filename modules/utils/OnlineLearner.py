@@ -29,7 +29,7 @@ class OnlineLearner(Module):
     def learn(self, batch):
         pass
 
-    def process(self, node):
+    def process(self, node, driver=None):
         if os.path.isfile(self.filename):
             self.load()
         self.learn(node)

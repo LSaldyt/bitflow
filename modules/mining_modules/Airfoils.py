@@ -121,7 +121,7 @@ class Airfoils(Module):
     def __init__(self, in_label=None, out_label='Airfoil', connect_labels=None, name='Airfoils'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
-    def process(self):
+    def process(self, driver=None):
         for url, name in scrape_airfoil_list():
             try:
                 details    = parse_airfoil(url, name)

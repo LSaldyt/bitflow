@@ -46,7 +46,7 @@ class DownloadedWikipediaModule(Module):
         page.clear()
         return properties
 
-    def process(self):
+    def process(self, driver=None):
         with open('data/links.txt', 'w', encoding='utf-8') as linkfile:
             linkfile.write('')
         link_queue = []

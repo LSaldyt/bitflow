@@ -19,6 +19,7 @@ class TaxonClassifier(OnlineTorchLearner):
     def __init__(self, filename='data/models/taxon_classifier.nn'):
         OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.0001, momentum=0.9), in_label='Image', name='TaxonClassifier', filename=filename)
         self.init_model()
+        self.driver = None
 
     def load_image(self, filename):
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(),
@@ -32,6 +33,24 @@ class TaxonClassifier(OnlineTorchLearner):
 
     def transform(self, node):
         print('TaxonClassifier:', node, flush=True)
+        parent = self.driver.get(node.data['parent'])
+        print(parent)
+
+        print(self.driver)
+        return []
+
+    def learn(self, node):
+        for inputs, labels in self.transform(node):
+            loss = self.step(inputs, labels)
+            print('{} loss: '.format(name), loss, flush=True)
+
+    def process(self, node, driver=None):
+        if self.driver is None:
+            self.driver = driver()
+        if os.path.isfile(self.filename):
+            self.load()
+        self.learn(node)
+        self.save()
         return []
 
     # def learn(self, node):

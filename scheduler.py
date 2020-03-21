@@ -12,6 +12,8 @@ from utils.utils import fetch
 
 import json
 
+from driver import Driver
+
 def save_batch(schedule_queue, transaction_queue, label, batch):
     filename = 'data/batches/{}'.format(uuid4())
     batch.save(filename)
@@ -42,22 +44,22 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         i += 1
 
 
-def module_runner(module_name, serialize_queue, batch_file):
+def module_runner(module_name, serialize_queue, batch_file, driver=None):
     module = fetch(module_name)
 
     if batch_file is None:
-        gen = module.process()
+        gen = module.process(driver=driver)
     else:
         batch = Batch()
         batch.load(batch_file)
-        gen = (transaction for item in batch.items for transaction in module.process(item))
+        gen = (transaction for item in batch.items for transaction in module.process(item, driver=driver))
     i = 0
     for transaction in gen:
         serialize_queue.put(transaction)
         i += 1
 
 class Scheduler:
-    def __init__(self, max_workers=20):
+    def __init__(self, max_workers=2):
         self.transaction_queue = Queue()
         self.indep_serialize_queue = Queue()
         self.serialize_queue   = Queue()
@@ -78,7 +80,7 @@ class Scheduler:
         in_label, out_label = self.dependencies[module_name]
         if in_label is None:
             print('Starting ', module_name, flush=True)
-            self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None))))
+            self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, Driver))))
         else:
             print('Added dependent: ', module_name, flush=True)
             self.dependents[in_label].append(module_name)
@@ -116,7 +118,7 @@ class Scheduler:
                 if label is not None:
                     for sublabel in label.split(':'):
                         for dependent in self.dependents[sublabel]:
-                            dep_proc = (dependent, Process(target=module_runner, args=(dependent, self.serialize_queue, batch_file)))
+                            dep_proc = (dependent, Process(target=module_runner, args=(dependent, self.serialize_queue, batch_file, Driver)))
                             if len(self.workers) < self.max_workers:
                                 self.add_proc(dep_proc)
                             else:
