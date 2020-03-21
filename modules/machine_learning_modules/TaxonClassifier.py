@@ -10,6 +10,8 @@ from torchvision import transforms
 
 from PIL import Image
 
+from pprint import pprint
+
 import os
 
 TAXA = {'kingdom', 'phylum', 'class', 'order', 'superfamily', 'family', 'genus', 'subgenus', 'species'}
@@ -19,7 +21,7 @@ class TaxonClassifier(OnlineTorchLearner):
     Classify taxa using a convolutional neural network
     '''
     def __init__(self, filename='data/models/taxon_classifier.nn'):
-        OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.AdamW, dict(lr=0.01), in_label='Image', name='TaxonClassifier', filename=filename)
+        OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.001, momentum=0.9), in_label='Image', name='TaxonClassifier', filename=filename)
         self.init_model()
         self.driver = None
 
@@ -36,6 +38,7 @@ class TaxonClassifier(OnlineTorchLearner):
 
     def init_model(self):
         self.model = HierarchicalModel(outputs=len(TAXA), width=100)
+        # self.model = HierarchicalModel(outputs=1, width=2)
 
     def load_labels(self, node):
         parent = self.driver.get(node.data['parent'])
@@ -58,6 +61,7 @@ class TaxonClassifier(OnlineTorchLearner):
         yield image, labels
 
     def step(self, inputs, labels):
+        losses = []
         self.optimizer.zero_grad()
         outputs = self.model(inputs)
         loss = None
@@ -67,13 +71,15 @@ class TaxonClassifier(OnlineTorchLearner):
                 loss = self.criterion(output, label)
             else:
                 loss += self.criterion(output, label)
+            losses.append(loss.item())
         loss.backward()
         self.optimizer.step()
-        return loss.item()
+        return losses
 
     def learn(self, node):
         for inputs, labels in self.transform(node):
             loss = self.step(inputs, labels)
+            # pprint(self.label_map)
             print('{} loss: '.format(self.name), loss, flush=True)
 
     def process(self, node, driver=None):

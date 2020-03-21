@@ -22,6 +22,7 @@ class HierarchicalModel(nn.Module):
             raise ValueError('Parameter i to Efficient Net Model must be between 0 and 7 inclusive, but was: {}'.format(i))
         # Top-1 Accuracy ranges from 76.3% to 84.4%, in intervals of roughly 1-2% between indexes
         self.feature_extractor = EfficientNetBase.from_pretrained('efficientnet-b{}'.format(i)) # Can go up to b7, with b0 having the least parameters, and b7 having the most (but more accuracy)
+        # self.feature_extractor.requires_grad = False
         self.fc1 = nn.Linear(1280 * 7 * 7, 1000)
         self.fc2 = nn.Linear(1000, 500)
 
