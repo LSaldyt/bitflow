@@ -1,7 +1,13 @@
 from ..utils.OnlineTorchLearner import OnlineTorchLearner
-from ..libraries.airfoil_regression.airfoil_model import AirfoilModel
+
+from pprint import pprint
 
 import pickle
+import os
+import math
+
+import numpy as np
+import pandas as pd 
 
 import torch
 import torch.nn as nn
@@ -10,10 +16,20 @@ import torch.optim as optim
 from torch.utils import data
 from torchvision import transforms
 
-from pprint import pprint
+class AirfoilModel(nn.Module):
+    def __init__(self, inputs, outputs, hidden=1, width=100):
+        nn.Module.__init__(self)
+        self.hidden = hidden
+        self.fc1 = nn.Linear(inputs, width)
+        self.fc2 = nn.Linear(width, width)
+        self.fc3 = nn.Linear(width, outputs)
 
-import os
-import math
+    def forward(self, x):
+        x = F.selu(self.fc1(x))
+        for i in range(self.hidden):
+            x = F.selu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
 class AirfoilRegressor(OnlineTorchLearner):
     '''

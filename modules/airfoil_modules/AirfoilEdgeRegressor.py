@@ -1,5 +1,4 @@
 from ..utils.OnlineTorchLearner import OnlineTorchLearner
-from ..libraries.hierarchical_classifier.hierarchical_model import HierarchicalModel
 
 import torch
 import torch.nn as nn
@@ -8,75 +7,66 @@ import torch.optim as optim
 from torch.utils import data
 from torchvision import transforms
 
-from PIL import Image
-
 from pprint import pprint
 
-import os
+import json, os, os.path, pickle
 
+from time import sleep
+from PIL import Image
+
+class EdgeRegressorModel(nn.Module):
+    def __init__(self, depth=1, kernel_size=3, start_channels=4, mid_channels=10, pool_size=2, activation=nn.ReLU):
+        nn.Module.__init__(self)
+        self.mid_channels = mid_channels
+        self.conv_layers = []
+        for i in range(depth):
+            if i == 0:
+                in_channels = start_channels
+            else:
+                in_channels = mid_channels
+
+            self.conv_layers.append(nn.Sequential(
+                nn.Conv2d(in_channels, mid_channels, kernel_size),
+                nn.MaxPool2d(pool_size, pool_size),
+                activation()
+                ))
+        self.final = nn.Sequential(nn.Linear(mid_channels * 26 * 26, 100), nn.Linear(100, 1000))
+
+    def forward(self, x):
+        for layer in self.conv_layers:
+            x = layer(x)
+        x = x.view(-1, 26 * 26 * self.mid_channels)
+        x = self.final(x)
+        x = x.double().squeeze(dim=0)
+        return x
 
 class AirfoilEdgeRegressor(OnlineTorchLearner):
-    def __init__(self, filename='data/models/airfoil_edge_regressor.nn'):
-        OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.001, momentum=0.9), in_label='Image', name='TaxonClassifier', filename=filename)
-        self.init_model()
+    def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
         self.driver = None
-
-        self.label_map    = {taxa : {'' : 0} for taxa in TAXA} # Map empty str to 0
-        self.label_counts = {taxa : 1 for taxa in TAXA}
+        optimizer_kwargs = dict(lr=0.0001, momentum=0.9)
+        OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='AirfoilPlot', name=name, filename=filename)
 
     def load_image(self, node):
         filename = node.data['filename']
-        tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),]) # Explanation of these magic numbers??
+        tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
         img = tfms(Image.open(filename))
         img = img.unsqueeze(0)
         return img
 
-    def init_model(self):
-        self.model = HierarchicalModel(outputs=len(TAXA), width=100)
-        # self.model = HierarchicalModel(outputs=1, width=2)
-
     def load_labels(self, node):
         parent = self.driver.get(node.data['parent'])
-        name = parent['canonical']
-        taxon  = self.driver.get(name)
-        labels = []
-        for taxa in TAXA:
-            taxa_name = taxon[taxa]
-            sub_label_map = self.label_map[taxa]
-            if taxa_name not in sub_label_map:
-                sub_label_map[taxa_name] = self.label_counts[taxa]
-                self.label_counts[taxa] += 1
-            labels.append(torch.tensor([sub_label_map[taxa_name]], dtype=torch.long))
-        return labels
+        with open(parent['coord_file'], 'rb') as infile:
+            coordinates = pickle.load(infile)
+        coordinates = sum(map(list, coordinates), [])
+        return torch.tensor(coordinates, dtype=torch.double)
+
+    def init_model(self):
+        self.model = EdgeRegressorModel(depth=3)
 
     def transform(self, node):
-        print('TaxonClassifier:', node, flush=True)
         labels = self.load_labels(node)
         image  = self.load_image(node)
         yield image, labels
-
-    def step(self, inputs, labels):
-        losses = []
-        self.optimizer.zero_grad()
-        outputs = self.model(inputs)
-        loss = None
-        for output, label in zip(outputs, labels):
-            output = output.unsqueeze(dim=0)
-            if loss is None:
-                loss = self.criterion(output, label)
-            else:
-                loss += self.criterion(output, label)
-            losses.append(loss.item())
-        loss.backward()
-        self.optimizer.step()
-        return losses
-
-    def learn(self, node):
-        for inputs, labels in self.transform(node):
-            loss = self.step(inputs, labels)
-            # pprint(self.label_map)
-            print('{} loss: '.format(self.name), loss, flush=True)
 
     def process(self, node, driver=None):
         if self.driver is None:

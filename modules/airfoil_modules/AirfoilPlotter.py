@@ -24,9 +24,9 @@ class AirfoilPlotter(Module):
         plt.plot(fx, fy, color='black')
         plt.plot(sx, sy, color='black')
         plt.axis('off')
-        filename = 'data/images/' + node.data['name'] + str(uuid4())
+        filename = 'data/images/' + node.data['name'] + str(uuid4()) + '.png'
         figsize  = (SIZE/DPI, SIZE/DPI)
-        plt.savefig(filename + '.png', figsize=figsize, dpi=DPI)
-        yield self.default_transaction(data=dict(filename=filename, parent=node.uuid))
+        plt.savefig(filename, figsize=figsize, dpi=DPI)
+        yield self.default_transaction(data=dict(filename=filename, parent=str(node.uuid)))
 
 

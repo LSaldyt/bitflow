@@ -1,5 +1,4 @@
-from .AirfoilRegressor import AirfoilRegressor
-from ..libraries.airfoil_regression.airfoil_model import AirfoilModel
+from .AirfoilRegressor import AirfoilRegressor, AirfoilModel
 
 import torch
 import torch.nn as nn
