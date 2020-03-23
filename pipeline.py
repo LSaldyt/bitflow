@@ -75,5 +75,6 @@ if __name__ == '__main__':
         settings_file = 'configurations/default.json'
     else:
         settings_file = args[0]
+    print('Loading settings from ', settings_file, flush=True)
     interface = PipelineInterface(settings_file)
     interface.start_server()

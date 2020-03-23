@@ -24,6 +24,7 @@ def fetch(module_name):
             
 def get_module_names():
     for subdir in get_module_subdirs():
+        print('Checking ', subdir, flush=True)
         modules = os.listdir('modules/' + subdir)
         for filename in modules:
             if filename.endswith('.py') and filename != '__init__.py':
