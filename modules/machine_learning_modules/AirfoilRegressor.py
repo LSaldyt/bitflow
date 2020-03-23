@@ -23,10 +23,10 @@ class AirfoilRegressor(OnlineTorchLearner):
     To inherit from this class, AirfoilRegressor must specify `init_model`, and `transform`.
     Also, a filename can be specified to the parent constructor to specify where the model is saved.
     '''
-    def __init__(self, filename='data/models/airfoil_regressor.nn'):
+    def __init__(self, name='AirfoilRegressor', filename='data/models/airfoil_regressor.nn'):
         # Take Airfoils as input, and produce no outputs.
         optimizer_kwargs = dict(lr=0.0001, momentum=0.9)
-        OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', name='AirfoilRegressor', filename=filename)
+        OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', name=name, filename=filename)
 
     def init_model(self):
         self.model = AirfoilModel(800 + 3 + 3, 4)
@@ -48,6 +48,7 @@ class AirfoilRegressor(OnlineTorchLearner):
         regime_vec = [mach, Re, Ncrit]
 
         coefficient_tuples = list(zip(*(details[k] for k in sorted(details.keys()) if k.startswith('C'))))
+        print(list(details.keys()), flush=True)
         alphas = details['alpha']
         limits = list(zip(details['Top_Xtr'], details['Bot_Xtr']))
 

@@ -18,14 +18,12 @@ class OnlineTorchLearner(OnlineLearner):
         # Take Airfoils as input, and produce no outputs.
         OnlineLearner.__init__(self, in_label=in_label, out_label=out_label, name=name, filename=filename)
         # Criteria needs to be MSE or anything compatible with regression
-        print(criterion)
         self.criterion = criterion()
         self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
 
     def step(self, inputs, labels):
         self.optimizer.zero_grad()
         outputs = self.model(inputs)
-        print(outputs, flush=True)
         loss = self.criterion(outputs, labels)
         loss.backward()
         self.optimizer.step()
@@ -50,10 +48,8 @@ class OnlineTorchLearner(OnlineLearner):
             os.rename(self.filename, backup)
         except PermissionError:
             sleep(1)
-            # self.load()
 
     def learn(self, node):
         for inputs, labels in self.transform(node):
-            print(inputs, labels, flush=True)
             loss = self.step(inputs, labels)
-            print('{} loss: '.format(name), loss, flush=True)
+            print('{} loss: '.format(self.name), loss, flush=True)
