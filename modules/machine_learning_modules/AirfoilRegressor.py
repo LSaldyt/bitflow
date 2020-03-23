@@ -29,7 +29,7 @@ class AirfoilRegressor(OnlineTorchLearner):
         OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', name=name, filename=filename)
 
     def init_model(self):
-        self.model = AirfoilModel(800 + 3 + 3, 4)
+        self.model = AirfoilModel(1000 + 3 + 3, 4)
 
     def read_node(self, node):
         coord_file  = node.data['coord_file']

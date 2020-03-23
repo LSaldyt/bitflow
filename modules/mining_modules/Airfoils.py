@@ -16,6 +16,16 @@ import numpy as np
 
 from ..utils.module import Module
 
+def calculate_camber_augmentation(coordinates, plot=False):
+    fx, sx, fy, sy = coordinates
+    camber = [(fyi + syi) / 2.0 for fyi, syi in zip(fy, sy)]
+    if plot:
+        plt.plot(fx, fy, color='blue')
+        plt.plot(sx, sy, color='red')
+        plt.plot(fx, camber, color='orange')
+        plt.show()
+    return camber
+
 def interpolate_airfoil(coords, n=200, plot=False):
     x, y = zip(*coords)
     s = interpolate.InterpolatedUnivariateSpline(x, y)
@@ -65,11 +75,11 @@ def scrape_airfoil_coords(page, name):
             first.append(pair)
         else:
             second.append(pair)
-    fx, fy = interpolate_airfoil(first)
-    sx, sy = interpolate_airfoil(second)
+    coordinates = interpolate_airfoil(first) + interpolate_airfoil(second)
+    coordinates += (calculate_camber_augmentation(coordinates),)
 
     with open(coord_file, 'wb') as outfile:
-        pickle.dump((fx, sx, fy, sy), outfile)
+        pickle.dump(coordinates, outfile)
     return coord_file
 
 def parse_detail_lines(lines):
