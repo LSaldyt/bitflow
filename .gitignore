@@ -10,3 +10,4 @@ col
 col_data
 data/*
 dependencies.json
+*.csv
