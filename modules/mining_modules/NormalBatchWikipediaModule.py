@@ -24,7 +24,7 @@ def read_links(text):
         if c1 == '[' and c2 == '[':
             inside = True
 
-class DownloadedWikipediaModule(Module):
+class NormalBatchWikipediaModule(Module):
     def __init__(self, in_label=None, out_label='WikipediaPage', connect_label=None, name='DownloadedWikipedia'):
         Module.__init__(self, in_label, out_label, connect_label, name)
 

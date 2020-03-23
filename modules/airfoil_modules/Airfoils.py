@@ -19,11 +19,6 @@ from ..utils.module import Module
 def calculate_camber_augmentation(coordinates, plot=False):
     fx, sx, fy, sy = coordinates
     camber = [(fyi + syi) / 2.0 for fyi, syi in zip(fy, sy)]
-    if plot:
-        plt.plot(fx, fy, color='blue')
-        plt.plot(sx, sy, color='red')
-        plt.plot(fx, camber, color='orange')
-        plt.show()
     return camber
 
 def interpolate_airfoil(coords, n=200, plot=False):
@@ -31,12 +26,6 @@ def interpolate_airfoil(coords, n=200, plot=False):
     s = interpolate.InterpolatedUnivariateSpline(x, y)
     xnew = np.linspace(min(x), max(x), n)
     ynew = s(xnew)
-    if plot:
-        # plt.plot(*coords, xnew, ynew)
-        plt.plot(xnew, ynew)
-        # plt.legend(['Normal', 'Interpolated'])
-        plt.title('Airfoil Interpolation')
-        plt.show()
     return xnew, ynew
 
 TOOLS_URL  = "http://airfoiltools.com"
