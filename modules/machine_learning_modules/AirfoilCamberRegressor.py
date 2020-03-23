@@ -27,7 +27,7 @@ class AirfoilCamberRegressor(AirfoilRegressor):
         AirfoilRegressor.__init__(self, filename=filename, name='AirfoilCamberRegressor')
 
     def init_model(self):
-        self.model = AirfoilModel(800 + 3 + 3, 4)
+        self.model = AirfoilModel(1000 + 3 + 3, 4)
 
     def calculate_camber_augmentation(self, coordinates, plot=False):
         fx, sx, fy, sy = coordinates
@@ -41,7 +41,7 @@ class AirfoilCamberRegressor(AirfoilRegressor):
 
     def transform(self, node):
         coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
-        coordinates += self.calculate_camber_augmentation(coordinates)
+        coordinates += (self.calculate_camber_augmentation(coordinates),)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
             coefficients = torch.Tensor(coefficients)
