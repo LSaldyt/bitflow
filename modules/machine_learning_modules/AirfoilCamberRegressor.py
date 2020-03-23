@@ -17,6 +17,8 @@ from pprint import pprint
 import os
 import math
 
+import matplotlib.pyplot as plt
+
 class AirfoilCamberRegressor(AirfoilRegressor):
     '''
     Regress the performance of airfoil geometries, augmented with camber line and relative thickness
@@ -27,12 +29,19 @@ class AirfoilCamberRegressor(AirfoilRegressor):
     def init_model(self):
         self.model = AirfoilModel(800 + 3 + 3, 4)
 
-    def calculate_camber_augmentation(self):
-        pass
+    def calculate_camber_augmentation(self, coordinates, plot=False):
+        fx, sx, fy, sy = coordinates
+        camber = [(fyi + syi) / 2.0 for fyi, syi in zip(fy, sy)]
+        if plot:
+            plt.plot(fx, fy, color='blue')
+            plt.plot(sx, sy, color='red')
+            plt.plot(fx, camber, color='orange')
+            plt.show()
+        return camber
 
     def transform(self, node):
-        print('HERE', flush=True)
         coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
+        coordinates += self.calculate_camber_augmentation(coordinates)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
             coefficients = torch.Tensor(coefficients)

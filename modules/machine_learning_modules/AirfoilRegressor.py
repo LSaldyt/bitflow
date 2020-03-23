@@ -48,7 +48,6 @@ class AirfoilRegressor(OnlineTorchLearner):
         regime_vec = [mach, Re, Ncrit]
 
         coefficient_tuples = list(zip(*(details[k] for k in sorted(details.keys()) if k.startswith('C'))))
-        print(list(details.keys()), flush=True)
         alphas = details['alpha']
         limits = list(zip(details['Top_Xtr'], details['Bot_Xtr']))
 
