@@ -4,17 +4,29 @@ import pickle
 
 import matplotlib.pyplot as plt
 
+from uuid import uuid4
+
+DPI  = 60
+SIZE = 226
+
 class AirfoilPlotter(Module):
     '''
     Plot a mined airfoil
     '''
     def __init__(self, name='AirfoilPlotter'):
-        Module.__init__(self, in_label='Airfoil', out_label='AirfoilImage:Image', connect_labels=('image', 'image'), name=name)
+        Module.__init__(self, in_label='Airfoil', out_label='AirfoilPlot:Image', connect_labels=('image', 'image'), name=name)
 
-    def transform(self, node):
+    def process(self, node, driver=None):
         coord_file  = node.data['coord_file']
         with open(coord_file, 'rb') as infile:
             coordinates = pickle.load(infile)
-        fx, sx, fy, sy, camber = coordinates
-        print('plotting', flush=True)
-        yield self.default_transaction(data=dict(filename='test'))
+        fx, fy, sx, sy, camber = coordinates
+        plt.plot(fx, fy, color='black')
+        plt.plot(sx, sy, color='black')
+        plt.axis('off')
+        filename = 'data/images/' + node.data['name'] + str(uuid4())
+        figsize  = (SIZE/DPI, SIZE/DPI)
+        plt.savefig(filename + '.png', figsize=figsize, dpi=DPI)
+        yield self.default_transaction(data=dict(filename=filename, parent=node.uuid))
+
+

@@ -5,6 +5,8 @@ import os
 import sys
 import shutil
 
+from utils.utils import get_module_names, fetch
+
 from scheduler import Scheduler
 
 class PipelineInterface:
@@ -22,17 +24,12 @@ class PipelineInterface:
         self.load_settings()
 
     def reload_modules(self):
-        mining_modules = os.listdir('modules/mining_modules/')
-        ml_modules     = os.listdir('modules/machine_learning_modules/')
-        modules = mining_modules + ml_modules
-        for filename in modules:
-            if filename.endswith('.py') and filename != '__init__.py':
-                name = os.path.basename(filename).split('.')[0]
-                if len(self.whitelist) > 0:
-                    if name in self.whitelist:
-                        self.scheduler.schedule(name)
-                elif name not in self.blacklist:
+        for name in get_module_names():
+            if len(self.whitelist) > 0:
+                if name in self.whitelist:
                     self.scheduler.schedule(name)
+            elif name not in self.blacklist:
+                self.scheduler.schedule(name)
 
     def load_settings(self):
         with open(self.filename, 'r') as infile:
