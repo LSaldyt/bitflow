@@ -14,8 +14,8 @@ class Driver():
     '''
     An API providing a lightweight connection to neo4j
     '''
-    def __init__(self):
-        with open('settings.json', 'r') as infile:
+    def __init__(self, settings_file):
+        with open(settings_file, 'r') as infile:
             settings = json.load(infile)
         self.neo_client = GraphDatabase.driver(settings["neo4j_server"], auth=basic_auth(settings["username"], settings["password"]), encrypted=settings["encrypted"])
         self.hset = set()
@@ -64,9 +64,9 @@ class Driver():
             records = session.run('MATCH (x:{label}) WITH COUNT (x) AS count RETURN count'.format(label=label)).records()
         return list(records)[0]['count']
 
-def driver_listener(transaction_queue):
+def driver_listener(transaction_queue, settings_file):
     start = time()
-    driver = Driver()
+    driver = Driver(settings_file)
     i = 0
     while True:
         batch_file = transaction_queue.get()
