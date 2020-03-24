@@ -10,7 +10,7 @@ def create_dependencies():
         in_type  = module.in_label
         out_type = module.out_label
         dependencies[name] = (in_type, out_type)
-    with open('dependencies.json', 'w') as outfile:
+    with open('.dependencies.json', 'w') as outfile:
         json.dump(dependencies, outfile, indent=4)
 
 if __name__ == '__main__':

@@ -9,5 +9,5 @@ highwire
 col
 col_data
 data/*
-dependencies.json
+.dependencies.json
 *.csv

@@ -73,7 +73,7 @@ class Scheduler:
         self.waiting           = []
         with open(settings_file, 'r') as infile:
             self.max_workers = json.load(infile)['scheduler:max_workers']
-        with open('dependencies.json', 'r') as infile:
+        with open('.dependencies.json', 'r') as infile:
             self.dependencies = json.load(infile)
         self.driver_creator = (Driver, settings_file)
 
