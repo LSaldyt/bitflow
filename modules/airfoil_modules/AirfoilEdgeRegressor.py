@@ -53,6 +53,7 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
 
     def load_labels(self, node):
         parent = self.driver.get(node.data['parent'])
+        print(parent)
         with open(parent['coord_file'], 'rb') as infile:
             coordinates = pickle.load(infile)
         fx, fy, sx, sy, camber = coordinates

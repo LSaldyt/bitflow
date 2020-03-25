@@ -21,15 +21,18 @@ class AirfoilAugmentor(Module):
         image += noise_map
         return Image.fromarray(image)
 
-    def augment(self, filename):
-        image = Image.open(filename)
+    def rand_fill(self, image):
         width, height = image.size
         center = int(0.5 * width), int(0.5 * height)
         origin = 0, 0
 
         ImageDraw.floodfill(image, xy=center, value=self.random_color())
         ImageDraw.floodfill(image, xy=origin, value=self.random_color())
+        return image
 
+    def augment(self, filename):
+        image = Image.open(filename)
+        image = self.rand_fill(image)
         image = self.noise(image, p=0.3)
 
         filename = filename.replace('.png', '_augmented.png')
@@ -38,4 +41,4 @@ class AirfoilAugmentor(Module):
 
     def process(self, node, driver=None):
         filename = self.augment(node.data['filename'])
-        yield self.default_transaction(data=dict(filename=filename, parent=str(node.uuid)))
+        yield self.default_transaction(data=dict(filename=filename, parent=node.data['parent']))

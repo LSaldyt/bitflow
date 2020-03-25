@@ -49,30 +49,31 @@ class AirfoilRegressor(OnlineTorchLearner):
 
     def read_node(self, node):
         coord_file  = node.data['coord_file']
-        detail_file = node.data['detail_file']
+        detail_files = node.data['detail_files']
 
-        with open(coord_file, 'rb') as infile:
-            coordinates = pickle.load(infile)
-        with open(detail_file, 'rb') as infile:
-            details = pickle.load(infile)
+        for detail_file in detail_files:
+            with open(coord_file, 'rb') as infile:
+                coordinates = pickle.load(infile)
+            with open(detail_file, 'rb') as infile:
+                details = pickle.load(infile)
 
-        signed_log = lambda x : 0 if x == 0 else math.copysign(math.log(abs(x)), x)
+            signed_log = lambda x : 0 if x == 0 else math.copysign(math.log(abs(x)), x)
 
-        mach  = signed_log(node.data['mach'])
-        Re    = signed_log(node.data['Re'])
-        Ncrit = signed_log(node.data['Ncrit'])
-        regime_vec = [mach, Re, Ncrit]
+            mach  = signed_log(node.data['mach'])
+            Re    = signed_log(node.data['Re'])
+            Ncrit = signed_log(node.data['Ncrit'])
+            regime_vec = [mach, Re, Ncrit]
 
-        coefficient_tuples = list(zip(*(details[k] for k in sorted(details.keys()) if k.startswith('C'))))
-        alphas = details['alpha']
-        limits = list(zip(details['Top_Xtr'], details['Bot_Xtr']))
+            coefficient_tuples = list(zip(*(details[k] for k in sorted(details.keys()) if k.startswith('C'))))
+            alphas = details['alpha']
+            limits = list(zip(details['Top_Xtr'], details['Bot_Xtr']))
 
-        return coordinates, coefficient_tuples, alphas, limits, regime_vec
+            yield coordinates, coefficient_tuples, alphas, limits, regime_vec
 
     def transform(self, node):
-        coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
-        coordinates = sum(map(list, coordinates), [])
-        for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
-            coefficients = torch.Tensor(coefficients)
-            inputs       = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
-            yield inputs, coefficients
+        for coordinates, coefficient_tuples, alphas, limits, regime_vec in self.read_node(node):
+            coordinates = sum(map(list, coordinates), [])
+            for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
+                coefficients = torch.Tensor(coefficients)
+                inputs       = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
+                yield inputs, coefficients
