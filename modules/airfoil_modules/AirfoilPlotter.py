@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 
 from uuid import uuid4
 
-DPI  = 60
-SIZE = 226
+DPI  = 100
 
 class AirfoilPlotter(Module):
     '''
@@ -21,14 +20,15 @@ class AirfoilPlotter(Module):
         with open(coord_file, 'rb') as infile:
             coordinates = pickle.load(infile)
         fx, fy, sx, sy, camber = coordinates
+        figsize  = (800/DPI, 200/DPI)
+        plt.figure(figsize=figsize, dpi=DPI)
         plt.plot(fx, fy, color='black')
         plt.plot(sx, sy, color='black')
         plt.plot([sx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
         plt.plot([sx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
         plt.axis('off')
         filename = 'data/images/' + node.data['name'] + str(uuid4()) + '.png'
-        figsize  = (SIZE/DPI, SIZE/DPI)
-        plt.savefig(filename, figsize=figsize, dpi=DPI)
+        plt.savefig(filename)
         yield self.default_transaction(data=dict(filename=filename, parent=str(node.uuid)))
 
 
