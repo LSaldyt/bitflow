@@ -31,6 +31,7 @@ class EdgeRegressorModel(nn.Module):
         self.final = nn.Sequential(nn.Linear(mid_size, out_size))
 
     def forward(self, x):
+        print(x.size())
         x = x.view(224 * 224 * 4)
         for layer in self.conv_layers:
             x = layer(x)
@@ -46,13 +47,16 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
 
     def load_image(self, filename):
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-        img = tfms(Image.open(filename))
+        #tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(),
+    # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),]) # Explanation of these magic numbers??
+        image = Image.open(filename)
+        image.putalpha(255)
+        img = tfms(image)
         img = img.unsqueeze(0)
         return img
 
     def load_labels(self, parent):
         parent = self.driver.get(parent)
-        print(parent)
         with open(parent['coord_file'], 'rb') as infile:
             coordinates = pickle.load(infile)
         fx, fy, sx, sy, camber = coordinates
