@@ -2,7 +2,7 @@
  "username" : "neo4j",
  "password" : "life",
  "encrypted": false,
- "scheduler:max_workers" : 4,
+ "scheduler:max_workers" : 2, 
  "pipeline:sleep_time" : 0.1,
  "pipeline:reload_time" : 30,
  "pipeline:blacklist" : [],

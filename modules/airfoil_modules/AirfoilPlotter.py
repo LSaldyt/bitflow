@@ -23,6 +23,8 @@ class AirfoilPlotter(Module):
         fx, fy, sx, sy, camber = coordinates
         plt.plot(fx, fy, color='black')
         plt.plot(sx, sy, color='black')
+        plt.plot([sx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
+        plt.plot([sx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
         plt.axis('off')
         filename = 'data/images/' + node.data['name'] + str(uuid4()) + '.png'
         figsize  = (SIZE/DPI, SIZE/DPI)
