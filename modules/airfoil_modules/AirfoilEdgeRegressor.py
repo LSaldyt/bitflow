@@ -44,15 +44,14 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         optimizer_kwargs = dict(lr=0.01, momentum=0.9)
         OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='AirfoilPlot', name=name, filename=filename)
 
-    def load_image(self, node):
-        filename = node.data['filename']
+    def load_image(self, filename):
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
         img = tfms(Image.open(filename))
         img = img.unsqueeze(0)
         return img
 
-    def load_labels(self, node):
-        parent = self.driver.get(node.data['parent'])
+    def load_labels(self, parent):
+        parent = self.driver.get(parent)
         print(parent)
         with open(parent['coord_file'], 'rb') as infile:
             coordinates = pickle.load(infile)
@@ -64,8 +63,8 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         self.model = EdgeRegressorModel(depth=1)
 
     def transform(self, node):
-        labels = self.load_labels(node)
-        image  = self.load_image(node)
+        labels = self.load_labels(node.data['parent'])
+        image  = self.load_image(filename = node.data['filename'])
         yield image, labels
 
     def process(self, node, driver=None):
