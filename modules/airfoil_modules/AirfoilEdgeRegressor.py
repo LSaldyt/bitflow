@@ -15,7 +15,7 @@ from time import sleep
 from PIL import Image
 
 class EdgeRegressorModel(nn.Module):
-    def __init__(self, depth=1, activation=nn.ReLU, mid_size=10000, out_size=600):
+    def __init__(self, depth=1, activation=nn.ReLU, mid_size=1000, out_size=600):
         nn.Module.__init__(self)
         self.conv_layers = []
         for i in range(depth):
@@ -42,7 +42,7 @@ class EdgeRegressorModel(nn.Module):
 class AirfoilEdgeRegressor(OnlineTorchLearner):
     def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
         self.driver = None
-        optimizer_kwargs = dict(lr=0.01, momentum=0.9)
+        optimizer_kwargs = dict(lr=0.1, momentum=0.5)
         OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='AirfoilPlot', name=name, filename=filename)
 
     def load_image(self, filename):
@@ -64,7 +64,7 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         return torch.tensor(coordinates, dtype=torch.double)
 
     def init_model(self):
-        self.model = EdgeRegressorModel(depth=1)
+        self.model = EdgeRegressorModel(depth=5)
 
     def transform(self, node):
         labels = self.load_labels(node.data['parent'])

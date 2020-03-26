@@ -48,6 +48,8 @@ class OnlineTorchLearner(OnlineLearner):
             os.rename(self.filename, backup)
         except PermissionError:
             sleep(1)
+        except FileNotFoundError:
+            print('Weight file {} not found, starting from scratch'.format(self.filename))
 
     def learn(self, node):
         for inputs, labels in self.transform(node):
