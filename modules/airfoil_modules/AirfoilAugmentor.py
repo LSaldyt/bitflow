@@ -2,9 +2,9 @@ from pprint import pprint
 
 import numpy as np
 from time import sleep
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 
-from random import randint
+from random import randint, random
 
 from ..utils.module import Module
 
@@ -31,10 +31,22 @@ class AirfoilAugmentor(Module):
         ImageDraw.floodfill(image, xy=origin, value=self.random_color())
         return image
 
-    def rand_translate(self, image):
-        horizontal = randint(100)
-        vertical   = randint(100)
-        return image.transform(image.size, Image.AFFINE, (1, 0, horizontal, 0, 1, vertical))
+    def white_edge_fill(self, image):
+        white = (255, 255, 255, 255)
+        width, height = image.size
+        for xy in [(1, 1), (1, height - 1), (width - 1, 1), (width - 1, height - 1)]:
+            ImageDraw.floodfill(image, xy=xy, value=white)
+        return image
+
+    def rand_affine(self, image):
+        horizontal = randint(-30, 30)
+        vertical   = randint(-10, 10)
+        stretch_x  = 0.5 + random() # 0.5 to 1.5
+        stretch_y  = 0.5 + random()
+
+        # x, y ->
+        # a x + by + c, d x + e y + f
+        return image.transform(image.size, Image.AFFINE, (stretch_x, 0, horizontal, 0, stretch_y, vertical))
 
     def flips(self, image):
         return [image] + list(map(Image.fromarray, [np.fliplr(image), np.flipud(image), np.fliplr(np.flipud(image))]))
@@ -42,12 +54,16 @@ class AirfoilAugmentor(Module):
     def augment(self, filename):
         image = Image.open(filename)
         for j in range(self.count):
-            image = self.rand_fill(image)
-            image = self.noise(image, p=0.08)
-
             for i, flipped in enumerate(self.flips(image)):
+                aug_image = ImageOps.expand(flipped, (120,) * 4)
+                aug_image = aug_image.rotate(randint(-10, 10))
+                aug_image = self.rand_affine(aug_image)
+                aug_image = self.white_edge_fill(aug_image)
+                aug_image = self.rand_fill(aug_image)
+                aug_image = self.noise(aug_image, p=0.05)
+
                 aug_file = filename.replace('.png', '_augmented_{}_{}.png'.format(i, j))
-                flipped.save(aug_file)
+                aug_image.save(aug_file)
                 yield aug_file
 
     def process(self, node, driver=None):

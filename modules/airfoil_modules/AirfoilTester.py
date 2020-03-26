@@ -10,8 +10,8 @@ class AirfoilTester(AirfoilEdgeRegressor):
         self.load() # Load trained weights
 
     def process(self, driver=None):
-        # image = self.load_image('data/whale_flipper_cross_section.png')
-        image = self.load_image('data/images/a18-il - A18 (original)5a5ac876-5915-443b-8986-8fa3017b36c7_augmented_0_9.png')
+        image = self.load_image('data/whale_flipper_cross_section.png')
+        # image = self.load_image('data/images/a18-il - A18 (original)5a5ac876-5915-443b-8986-8fa3017b36c7_augmented_0_9.png')
         coordinates = self.model(image).detach().numpy()
         
         # coordinates = sum(map(list, [fx, fy, sy]), [])

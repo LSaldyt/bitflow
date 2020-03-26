@@ -44,7 +44,7 @@ class EdgeRegressorModel(nn.Module):
 class AirfoilEdgeRegressor(OnlineTorchLearner):
     def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
         self.driver = None
-        optimizer_kwargs = dict(lr=0.1, momentum=0.9)
+        optimizer_kwargs = dict(lr=0.01, momentum=0.9)
         OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='AugmentedAirfoilPlot', name=name, filename=filename)
 
     def load_image(self, filename):
