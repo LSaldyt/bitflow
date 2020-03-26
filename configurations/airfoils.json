@@ -3,6 +3,7 @@
  "password" : "life",
  "encrypted": false,
  "scheduler:max_workers" : 4,
+ "batch_sizes" : {"__default__" : 10},
  "pipeline:sleep_time" : 0.1,
  "pipeline:reload_time" : 30,
  "pipeline:blacklist" : [],
