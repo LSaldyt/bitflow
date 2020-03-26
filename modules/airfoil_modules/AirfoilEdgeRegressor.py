@@ -15,42 +15,48 @@ from time import sleep
 from PIL import Image
 
 class EdgeRegressorModel(nn.Module):
-    def __init__(self, depth=1, activation=nn.ReLU, mid_size=1000, out_size=60):
+    def __init__(self, depth=1, activation=nn.ReLU, out_size=60, mid_channels=8):
         nn.Module.__init__(self)
+        self.norm = nn.BatchNorm2d(4)
         self.conv_layers = []
         for i in range(depth):
+            if i == 0:
+                channels = 4
+            else:
+                channels = 8
             self.conv_layers.append(nn.Sequential(
-                nn.Conv2d(4, 4, 3, padding=1),
+                nn.Conv2d(channels, mid_channels, 3, padding=1),
+                nn.Conv2d(mid_channels, mid_channels, 3, padding=1),
+                nn.MaxPool2d(3, padding=1), 
+                nn.BatchNorm2d(mid_channels),
                 activation()
                 ))
-        self.prefinal = nn.Sequential(
-            nn.Linear(224 * 224 * 4, mid_size),
+        self.conv_layers.append(nn.Sequential(
+            nn.Conv2d(mid_channels, mid_channels, 3),
             activation()
+            ))
+        self.prefinal = nn.Sequential(
+            nn.Linear(222 * 222 * mid_channels, 1000),
             )
-        self.final = nn.Sequential(nn.Linear(mid_size, out_size))
+        self.final = nn.Sequential(nn.Linear(1000, out_size))
 
     def forward(self, x):
-        # print(x.size())
+        x = self.norm(x)
         for layer in self.conv_layers:
             x = layer(x)
-            # print(x.size())
-        x = x.view(224 * 224 * 4)
+        x = x.view(222 * 222 * 8)
         x = self.prefinal(x)
         x = self.final(x)
-        # print(x.size())
         x = x.double().squeeze(dim=0)
         return x
 
 class AirfoilEdgeRegressor(OnlineTorchLearner):
     def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
         self.driver = None
-        optimizer_kwargs = dict(lr=0.01, momentum=0.9)
-        OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='AugmentedAirfoilPlot', name=name, filename=filename)
+        OnlineTorchLearner.__init__(self, nn.MSELoss, optim.Adadelta, dict(lr=1.0, rho=0.9, eps=1e-06, weight_decay=0), in_label='AugmentedAirfoilPlot', name=name, filename=filename)
 
     def load_image(self, filename):
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-        #tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(),
-    # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),]) # Explanation of these magic numbers??
         image = Image.open(filename)
         image.putalpha(255)
         img = tfms(image)
@@ -69,7 +75,7 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         return torch.tensor(coordinates, dtype=torch.double)
 
     def init_model(self):
-        self.model = EdgeRegressorModel(depth=3)
+        self.model = EdgeRegressorModel(depth=6)
 
     def transform(self, node):
         labels = self.load_labels(node.data['parent'])
