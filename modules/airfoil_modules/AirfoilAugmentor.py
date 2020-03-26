@@ -38,6 +38,7 @@ class AirfoilAugmentor(Module):
         return image.transform(image.size, Image.AFFINE, (1, 0, horizontal, 0, 1, vertical))
 
     def flips(self, image):
+        return [image]
         return [image] + list(map(Image.fromarray, [np.fliplr(image), np.flipud(image), np.fliplr(np.flipud(image))]))
 
     def augment(self, filename):

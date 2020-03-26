@@ -19,30 +19,32 @@ class EdgeRegressorModel(nn.Module):
         nn.Module.__init__(self)
         self.conv_layers = []
         for i in range(depth):
-            if i == 0:
-                insize = 224 * 224 * 4
-            else:
-                insize = mid_size
-
             self.conv_layers.append(nn.Sequential(
-                nn.Linear(insize, mid_size),
+                nn.Conv2d(4, 4, 3, padding=1),
                 activation()
                 ))
+        self.prefinal = nn.Sequential(
+            nn.Linear(224 * 224 * 4, mid_size),
+            activation()
+            )
         self.final = nn.Sequential(nn.Linear(mid_size, out_size))
 
     def forward(self, x):
-        print(x.size())
-        x = x.view(224 * 224 * 4)
+        # print(x.size())
         for layer in self.conv_layers:
             x = layer(x)
+            # print(x.size())
+        x = x.view(224 * 224 * 4)
+        x = self.prefinal(x)
         x = self.final(x)
+        # print(x.size())
         x = x.double().squeeze(dim=0)
         return x
 
 class AirfoilEdgeRegressor(OnlineTorchLearner):
     def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
         self.driver = None
-        optimizer_kwargs = dict(lr=1.0, momentum=0.5)
+        optimizer_kwargs = dict(lr=0.01, momentum=0.9)
         OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='AugmentedAirfoilPlot', name=name, filename=filename)
 
     def load_image(self, filename):
@@ -64,7 +66,7 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         return torch.tensor(coordinates, dtype=torch.double)
 
     def init_model(self):
-        self.model = EdgeRegressorModel(depth=5)
+        self.model = EdgeRegressorModel(depth=3)
 
     def transform(self, node):
         labels = self.load_labels(node.data['parent'])

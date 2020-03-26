@@ -117,20 +117,21 @@ def parse_airfoil(url, name):
     return details
 
 class Airfoils(Module):
-    def __init__(self, in_label=None, out_label='Airfoil', connect_labels=None, name='Airfoils'):
+    def __init__(self, in_label='AirfoilURL', out_label='Airfoil', connect_labels=None, name='Airfoils'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
-    def process(self, driver=None):
-        for url, name in scrape_airfoil_list():
-            try:
-                details    = parse_airfoil(url, name)
-                coord_file = scrape_airfoil_coords(url, name)
-                detail_files = []
-                for detail_page in details:
-                    detail_file = 'data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit'])
-                    with open(detail_file, 'wb') as outfile:
-                        pickle.dump(detail_page.pop('data'), outfile)
-                    detail_files.append(detail_file)
-                yield self.default_transaction({'name' : name, 'detail_files': detail_files, 'coord_file' : coord_file, **detail_page})
-            except ValueError:
-                pass
+    def process(self, transaction, driver=None):
+        url  = transaction.data['url']
+        name = transaction.data['name']
+        try:
+            details    = parse_airfoil(url, name)
+            coord_file = scrape_airfoil_coords(url, name)
+            detail_files = []
+            for detail_page in details:
+                detail_file = 'data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit'])
+                with open(detail_file, 'wb') as outfile:
+                    pickle.dump(detail_page.pop('data'), outfile)
+                detail_files.append(detail_file)
+            yield self.default_transaction({'name' : name, 'detail_files': detail_files, 'coord_file' : coord_file, **detail_page})
+        except ValueError:
+            pass
