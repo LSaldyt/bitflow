@@ -26,20 +26,20 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     batches = dict()
     i = 0
     while True:
-        try:
-            transaction = serialize_queue.get(block=False)
-            label = transaction.out_label
-            if label not in batches:
-                batches[label] = Batch()
-            batch = batches[label]
-            batch.add(transaction)
-            max_length = sizes.get(label, sizes['__default__'])
-            if len(batch) >= max_length:
-                save_batch(schedule_queue, transaction_queue, label, batch)
-        except Empty:
-            for label, batch in batches.items():
-                if len(batch) > 0:
-                    save_batch(schedule_queue, transaction_queue, label, batch)
+        # try:
+        transaction = serialize_queue.get()
+        label = transaction.out_label
+        if label not in batches:
+            batches[label] = Batch()
+        batch = batches[label]
+        batch.add(transaction)
+        max_length = sizes.get(label, sizes['__default__'])
+        if len(batch) >= max_length:
+            save_batch(schedule_queue, transaction_queue, label, batch)
+        # except Empty:
+        #     for label, batch in batches.items():
+        #         if len(batch) > 0:
+        #             save_batch(schedule_queue, transaction_queue, label, batch)
         duration = time() - start
         i += 1
 

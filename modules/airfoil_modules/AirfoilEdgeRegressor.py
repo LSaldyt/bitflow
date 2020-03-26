@@ -27,16 +27,13 @@ class EdgeRegressorModel(nn.Module):
             self.conv_layers.append(nn.Sequential(
                 nn.Conv2d(channels, mid_channels, 3, padding=1),
                 nn.Conv2d(mid_channels, mid_channels, 3, padding=1),
-                nn.MaxPool2d(3, padding=1), 
                 nn.BatchNorm2d(mid_channels),
                 activation()
                 ))
-        self.conv_layers.append(nn.Sequential(
-            nn.Conv2d(mid_channels, mid_channels, 3),
-            activation()
-            ))
+            if i < 4 and i > 1:
+                self.conv_layers.append(nn.MaxPool2d(2))
         self.prefinal = nn.Sequential(
-            nn.Linear(222 * 222 * mid_channels, 1000),
+            nn.Linear(56 * 56 * mid_channels, 1000),
             )
         self.final = nn.Sequential(nn.Linear(1000, out_size))
 
@@ -44,10 +41,12 @@ class EdgeRegressorModel(nn.Module):
         x = self.norm(x)
         for layer in self.conv_layers:
             x = layer(x)
-        x = x.view(222 * 222 * 8)
+        x = x.view(-1, 56 * 56 * 8)
         x = self.prefinal(x)
         x = self.final(x)
-        x = x.double().squeeze(dim=0)
+        x = x.double()
+        print('Output:')
+        print(x.size())
         return x
 
 class AirfoilEdgeRegressor(OnlineTorchLearner):
@@ -72,21 +71,49 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         fy = [y for i, y in enumerate(fy) if i % 10 == 0]
         sy = [y for i, y in enumerate(sy) if i % 10 == 0]
         coordinates = sum(map(list, [fx, fy, sy]), [])
-        return torch.tensor(coordinates, dtype=torch.double)
+        labels = torch.tensor(coordinates, dtype=torch.double)
+        return labels.unsqueeze(0)
 
     def init_model(self):
         self.model = EdgeRegressorModel(depth=6)
 
     def transform(self, node):
-        labels = self.load_labels(node.data['parent'])
-        image  = self.load_image(filename = node.data['filename'])
-        yield image, labels
+        try:
+            labels = self.load_labels(node.data['parent'])
+            image  = self.load_image(filename = node.data['filename'])
+            yield image, labels
+        except ValueError as e:
+            print(e)
+            pass
 
     def process(self, node, driver=None):
+        1/0
+
+    def learn(self, items):
+        input_list = []
+        label_list = []
+        for node in items:
+            for inputs, labels in self.transform(node):
+                input_list.append(inputs)
+                label_list.append(labels)
+        self.optimizer.zero_grad()
+        inputs = torch.cat(input_list)
+        labels = torch.cat(label_list)
+        outputs = self.model(inputs)
+        print('Labels:')
+        print(labels.size())
+        loss = self.criterion(outputs, labels)
+        loss.backward()
+        self.optimizer.step()
+        print('{} loss: '.format(self.name), loss.item(), flush=True)
+
+    def process_batch(self, batch, driver=None):
+        print('Batch:', len(batch.items), flush=True)
         if self.driver is None:
             self.driver = driver[0](driver[1])
         if os.path.isfile(self.filename):
             self.load()
-        self.learn(node)
+        self.learn(batch.items)
         self.save()
         return []
+
