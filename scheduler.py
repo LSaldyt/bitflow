@@ -1,13 +1,18 @@
 from multiprocessing import Process, Queue, Pool, Manager
 from queue import Empty
 from collections import defaultdict
-from importlib import import_module
 from time import sleep, time
 from uuid import uuid4
 from pprint import pprint
 
 from driver import driver_listener
 from batch import Batch
+
+from utils.utils import fetch
+
+import json
+
+from driver import Driver
 
 def save_batch(schedule_queue, transaction_queue, label, batch):
     filename = 'data/batches/{}'.format(uuid4())
@@ -38,60 +43,47 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         duration = time() - start
         i += 1
 
-def fetch(module_name):
-    try:
-        module = import_module('modules.mining_modules.{}'.format(module_name))
-    except:
-        module = import_module('modules.machine_learning_modules.{}'.format(module_name))
-    return getattr(module, module_name)()
 
-def module_runner(module_name, serialize_queue, batch_file):
+def module_runner(module_name, serialize_queue, batch_file, driver=None):
     module = fetch(module_name)
 
     if batch_file is None:
-        gen = module.process()
+        gen = module.process(driver=driver)
     else:
         batch = Batch()
         batch.load(batch_file)
-        gen = (transaction for item in batch.items for transaction in module.process(item))
+        gen = module.process_batch(batch, driver=driver)
     i = 0
     for transaction in gen:
         serialize_queue.put(transaction)
         i += 1
 
 class Scheduler:
-    def __init__(self, max_workers=20):
+    def __init__(self, settings_file):
+        with open(settings_file, 'r') as infile:
+            self.settings = json.load(infile)
+        self.max_workers = self.settings['scheduler:max_workers']
         self.transaction_queue = Queue()
         self.indep_serialize_queue = Queue()
         self.serialize_queue   = Queue()
         self.schedule_queue    = Queue()
-        self.driver_process    = Process(target=driver_listener,  args=(self.transaction_queue,))
-        sizes = {'__default__' : 10}
-        self.indep_batch_process     = Process(target=batch_serializer, args=(self.indep_serialize_queue, self.transaction_queue, self.schedule_queue, sizes))
-        self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, sizes))
+        self.driver_process    = Process(target=driver_listener,  args=(self.transaction_queue, settings_file))
+        self.sizes = self.settings['batch_sizes']
+        self.indep_batch_process     = Process(target=batch_serializer, args=(self.indep_serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
+        self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
         self.dependents        = defaultdict(list)
         self.workers           = []
         self.waiting           = []
-        self.max_workers       = max_workers
-        self.dependencies      = dict()
-
-    def get_type_signature(self, module_name):
-        if module_name not in self.dependencies:
-            return None, None
-        depends = self.dependencies[module_name]
-        in_label, out_label = depends["in"], depends["out"]
-        if in_label == 'None':
-            in_label = None
-        if out_label == 'None':
-            out_label = None
-        return in_label, out_label
+        with open('.dependencies.json', 'r') as infile:
+            self.dependencies = json.load(infile)
+        self.driver_creator = (Driver, settings_file)
 
     def schedule(self, module_name):
         print('Scheduling ', module_name, flush=True)
-        in_label, out_label = self.get_type_signature(module_name)
+        in_label, out_label = self.dependencies[module_name]
         if in_label is None:
             print('Starting ', module_name, flush=True)
-            self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None))))
+            self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.driver_creator))))
         else:
             print('Added dependent: ', module_name, flush=True)
             self.dependents[in_label].append(module_name)
@@ -129,7 +121,7 @@ class Scheduler:
                 if label is not None:
                     for sublabel in label.split(':'):
                         for dependent in self.dependents[sublabel]:
-                            dep_proc = (dependent, Process(target=module_runner, args=(dependent, self.serialize_queue, batch_file)))
+                            dep_proc = (dependent, Process(target=module_runner, args=(dependent, self.serialize_queue, batch_file, self.driver_creator)))
                             if len(self.workers) < self.max_workers:
                                 self.add_proc(dep_proc)
                             else:

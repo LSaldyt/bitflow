@@ -1,5 +1,4 @@
-from .AirfoilRegressor import AirfoilRegressor
-from ..libraries.airfoil_regression.airfoil_model import AirfoilModel
+from .AirfoilRegressor import AirfoilRegressor, AirfoilModel
 
 import torch
 import torch.nn as nn
@@ -8,22 +7,21 @@ import torch.optim as optim
 
 from pprint import pprint
 
-class AirfoilCreator(AirfoilRegressor):
+class AirfoilAngleRegressor(AirfoilRegressor):
     '''
-    Create an airfoil geometry based on desired performance coefficients
+    Guess the angle of attack based on geometry and metrics
     '''
-    def __init__(self, filename='data/models/airfoil_creator.nn'):
+    def __init__(self, filename='data/models/airfoil_angle_regressor.nn'):
         AirfoilRegressor.__init__(self, filename=filename)
 
     def init_model(self):
-        self.model = AirfoilModel(4 + 3 + 3, 800) # Reverse of AirfoilRegressor's default
+        self.model = AirfoilModel(4 + 3 + 2 + 800, 1) # Reverse of AirfoilRegressor's default
 
     def transform(self, node):
         coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
-            inputs  = torch.Tensor(list(coefficients) + regime_vec + [top, bot, alpha])
-            outputs = torch.Tensor(coordinates)
+            inputs  = torch.Tensor(list(coefficients) + regime_vec + [top, bot] + coordinates)
+            outputs = torch.Tensor([alpha])
             yield inputs, outputs
-
 

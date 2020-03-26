@@ -12,7 +12,7 @@ class ImageModule(Module):
     def __init__(self, in_label=None, out_label=None, connect_labels=None, name='AbstractImageModule'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
-    def process(self, urls, uuid=None, title=None):
+    def process(self, urls, uuid=None, title=None, driver=None):
         if title is None:
             title = 'independent'
         for i, image in enumerate(urls):

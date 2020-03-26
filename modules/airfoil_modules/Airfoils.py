@@ -16,17 +16,16 @@ import numpy as np
 
 from ..utils.module import Module
 
+def calculate_camber_augmentation(coordinates, plot=False):
+    fx, sx, fy, sy = coordinates
+    camber = [(fyi + syi) / 2.0 for fyi, syi in zip(fy, sy)]
+    return camber
+
 def interpolate_airfoil(coords, n=200, plot=False):
     x, y = zip(*coords)
     s = interpolate.InterpolatedUnivariateSpline(x, y)
     xnew = np.linspace(min(x), max(x), n)
     ynew = s(xnew)
-    if plot:
-        # plt.plot(*coords, xnew, ynew)
-        plt.plot(xnew, ynew)
-        # plt.legend(['Normal', 'Interpolated'])
-        plt.title('Airfoil Interpolation')
-        plt.show()
     return xnew, ynew
 
 TOOLS_URL  = "http://airfoiltools.com"
@@ -65,11 +64,11 @@ def scrape_airfoil_coords(page, name):
             first.append(pair)
         else:
             second.append(pair)
-    fx, fy = interpolate_airfoil(first)
-    sx, sy = interpolate_airfoil(second)
+    coordinates = interpolate_airfoil(first) + interpolate_airfoil(second)
+    coordinates += (calculate_camber_augmentation(coordinates),)
 
     with open(coord_file, 'wb') as outfile:
-        pickle.dump((fx, sx, fy, sy), outfile)
+        pickle.dump(coordinates, outfile)
     return coord_file
 
 def parse_detail_lines(lines):
@@ -121,15 +120,17 @@ class Airfoils(Module):
     def __init__(self, in_label=None, out_label='Airfoil', connect_labels=None, name='Airfoils'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
-    def process(self):
+    def process(self, driver=None):
         for url, name in scrape_airfoil_list():
             try:
                 details    = parse_airfoil(url, name)
                 coord_file = scrape_airfoil_coords(url, name)
+                detail_files = []
                 for detail_page in details:
                     detail_file = 'data/airfoil_data/{}_{}_{}.pkl'.format(name, detail_page['Re'], detail_page['Ncrit'])
                     with open(detail_file, 'wb') as outfile:
                         pickle.dump(detail_page.pop('data'), outfile)
-                    yield self.default_transaction({'name' : name, 'detail_file': detail_file, 'coord_file' : coord_file, **detail_page})
+                    detail_files.append(detail_file)
+                yield self.default_transaction({'name' : name, 'detail_files': detail_files, 'coord_file' : coord_file, **detail_page})
             except ValueError:
                 pass

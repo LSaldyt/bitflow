@@ -102,7 +102,7 @@ class TestingModule(Module):
     def __init__(self, in_label=None, out_label='Species', connect_label=None, name='Testing', count=1):
         Module.__init__(self, in_label, out_label, connect_label, name, count)
 
-    def process(self):
+    def process(self, driver=None):
         yield self.default_transaction({'name' : 'Caenorhabditis elegans'})
         yield self.default_transaction({'name' : 'Staphylococcus aureus'})
         # for species in aloe_trees.split('\n'):

@@ -24,7 +24,7 @@ def read_links(text):
         if c1 == '[' and c2 == '[':
             inside = True
 
-class DownloadedWikipediaModule(Module):
+class NormalBatchWikipediaModule(Module):
     def __init__(self, in_label=None, out_label='WikipediaPage', connect_label=None, name='DownloadedWikipedia'):
         Module.__init__(self, in_label, out_label, connect_label, name)
 
@@ -46,7 +46,7 @@ class DownloadedWikipediaModule(Module):
         page.clear()
         return properties
 
-    def process(self):
+    def process(self, driver=None):
         with open('data/links.txt', 'w', encoding='utf-8') as linkfile:
             linkfile.write('')
         link_queue = []
