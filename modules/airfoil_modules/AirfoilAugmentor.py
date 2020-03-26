@@ -10,7 +10,7 @@ from ..utils.module import Module
 
 class AirfoilAugmentor(Module):
     def __init__(self, count=10):
-        Module.__init__(self, in_label='AirfoilPlot', out_label='AirfoilPlot:Image', connect_labels=('augmented_image', 'augmented_image'))
+        Module.__init__(self, in_label='CleanAirfoilPlot', out_label='AugmentedAirfoilPlot:Image', connect_labels=('augmented_image', 'augmented_image'))
         self.count = count
 
     def random_color(self):
@@ -38,7 +38,7 @@ class AirfoilAugmentor(Module):
         return image.transform(image.size, Image.AFFINE, (1, 0, horizontal, 0, 1, vertical))
 
     def flips(self, image):
-        yield image, np.fliplr(image), np.flipud(image), np.fliplr(np.flipud(image))
+        return [image] + list(map(Image.fromarray, [np.fliplr(image), np.flipud(image), np.fliplr(np.flipud(image))]))
 
     def augment(self, filename):
         image = Image.open(filename)
@@ -46,10 +46,10 @@ class AirfoilAugmentor(Module):
             image = self.rand_fill(image)
             image = self.noise(image, p=0.25)
 
-            for i, flipped in self.flips(image):
-                filename = filename.replace('.png', '_augmented_{}_{}.png'.format(i, j))
-                image.save(filename)
-                yield filename
+            for i, flipped in enumerate(self.flips(image)):
+                aug_file = filename.replace('.png', '_augmented_{}_{}.png'.format(i, j))
+                flipped.save(aug_file)
+                yield aug_file
 
     def process(self, node, driver=None):
         for filename in self.augment(node.data['filename']):
