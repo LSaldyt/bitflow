@@ -9,8 +9,9 @@ from random import randint
 from ..utils.module import Module
 
 class AirfoilAugmentor(Module):
-    def __init__(self):
+    def __init__(self, count=10):
         Module.__init__(self, in_label='AirfoilPlot', out_label='AirfoilPlot:Image', connect_labels=('augmented_image', 'augmented_image'))
+        self.count = count
 
     def random_color(self):
         return tuple(randint(0, 255) for _ in range(4))
@@ -30,15 +31,26 @@ class AirfoilAugmentor(Module):
         ImageDraw.floodfill(image, xy=origin, value=self.random_color())
         return image
 
+    def rand_translate(self, image):
+        minsize    = min(image.size)
+        horizontal = randint(minsize)
+        vertical   = randint(minsize)
+        return image.transform(image.size, Image.AFFINE, (1, 0, horizontal, 0, 1, vertical))
+
+    def flips(self, image):
+        yield image, np.fliplr(image), np.flipud(image), np.fliplr(np.flipud(image))
+
     def augment(self, filename):
         image = Image.open(filename)
-        image = self.rand_fill(image)
-        image = self.noise(image, p=0.3)
+        for j in range(self.count):
+            image = self.rand_fill(image)
+            image = self.noise(image, p=0.25)
 
-        filename = filename.replace('.png', '_augmented.png')
-        image.save(filename)
-        return filename
+            for i, flipped in self.flips(image):
+                filename = filename.replace('.png', '_augmented_{}_{}.png'.format(i, j))
+                image.save(filename)
+                yield filename
 
     def process(self, node, driver=None):
-        filename = self.augment(node.data['filename'])
-        yield self.default_transaction(data=dict(filename=filename, parent=node.data['parent']))
+        for filename in self.augment(node.data['filename']):
+            yield self.default_transaction(data=dict(filename=filename, parent=node.data['parent']))
