@@ -9,7 +9,7 @@ from random import randint
 from ..utils.module import Module
 
 class AirfoilAugmentor(Module):
-    def __init__(self, count=10):
+    def __init__(self, count=50):
         Module.__init__(self, in_label='CleanAirfoilPlot', out_label='AugmentedAirfoilPlot:Image', connect_labels=('augmented_image', 'augmented_image'))
         self.count = count
 
@@ -32,20 +32,18 @@ class AirfoilAugmentor(Module):
         return image
 
     def rand_translate(self, image):
-        minsize    = min(image.size)
-        horizontal = randint(minsize)
-        vertical   = randint(minsize)
+        horizontal = randint(100)
+        vertical   = randint(100)
         return image.transform(image.size, Image.AFFINE, (1, 0, horizontal, 0, 1, vertical))
 
     def flips(self, image):
-        return [image]
         return [image] + list(map(Image.fromarray, [np.fliplr(image), np.flipud(image), np.fliplr(np.flipud(image))]))
 
     def augment(self, filename):
         image = Image.open(filename)
         for j in range(self.count):
             image = self.rand_fill(image)
-            image = self.noise(image, p=0.25)
+            image = self.noise(image, p=0.08)
 
             for i, flipped in enumerate(self.flips(image)):
                 aug_file = filename.replace('.png', '_augmented_{}_{}.png'.format(i, j))

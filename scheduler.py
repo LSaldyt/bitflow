@@ -68,7 +68,8 @@ class Scheduler:
         self.serialize_queue   = Queue()
         self.schedule_queue    = Queue()
         self.driver_process    = Process(target=driver_listener,  args=(self.transaction_queue, settings_file))
-        self.sizes = self.settings['batch_sizes']
+        self.sizes  = self.settings['batch_sizes']
+        self.limits = self.settings['process_limits']
         self.indep_batch_process     = Process(target=batch_serializer, args=(self.indep_serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
         self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
         self.dependents        = defaultdict(list)
@@ -108,10 +109,22 @@ class Scheduler:
         process.start()
         self.workers.append((dependent, process))
 
+    def check_limit(self, dependent):
+        # print('Checking limit for ', dependent, flush=True)
+        count = 0
+        for name, worker in self.workers:
+            if name == dependent:
+                count += 1
+        # print(count, ' already running', flush=True)
+        upper = self.limits.get(dependent, self.limits['__default__'])
+        # print('Upper limit: ', upper, flush=True)
+        return count < upper
+
     def check(self):
         self.workers = [(name, worker) for name, worker in self.workers if worker.is_alive()]
         while len(self.waiting) > 0:
-            if len(self.workers) < self.max_workers:
+            dependent, proc = self.waiting[-1]
+            if len(self.workers) < self.max_workers and self.check_limit(dependent):
                 self.add_proc(self.waiting.pop())
             else:
                 break
@@ -122,7 +135,7 @@ class Scheduler:
                     for sublabel in label.split(':'):
                         for dependent in self.dependents[sublabel]:
                             dep_proc = (dependent, Process(target=module_runner, args=(dependent, self.serialize_queue, batch_file, self.driver_creator)))
-                            if len(self.workers) < self.max_workers:
+                            if len(self.workers) < self.max_workers and self.check_limit(dependent):
                                 self.add_proc(dep_proc)
                             else:
                                 self.waiting.append(dep_proc)

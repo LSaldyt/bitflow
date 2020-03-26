@@ -15,7 +15,7 @@ from time import sleep
 from PIL import Image
 
 class EdgeRegressorModel(nn.Module):
-    def __init__(self, depth=1, activation=nn.ReLU, mid_size=1000, out_size=600):
+    def __init__(self, depth=1, activation=nn.ReLU, mid_size=1000, out_size=60):
         nn.Module.__init__(self)
         self.conv_layers = []
         for i in range(depth):
@@ -44,7 +44,7 @@ class EdgeRegressorModel(nn.Module):
 class AirfoilEdgeRegressor(OnlineTorchLearner):
     def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
         self.driver = None
-        optimizer_kwargs = dict(lr=0.01, momentum=0.9)
+        optimizer_kwargs = dict(lr=0.1, momentum=0.9)
         OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='AugmentedAirfoilPlot', name=name, filename=filename)
 
     def load_image(self, filename):
@@ -62,6 +62,9 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         with open(parent['coord_file'], 'rb') as infile:
             coordinates = pickle.load(infile)
         fx, fy, sx, sy, camber = coordinates
+        fx = [x for i, x in enumerate(fx) if i % 10 == 0]
+        fy = [y for i, y in enumerate(fy) if i % 10 == 0]
+        sy = [y for i, y in enumerate(sy) if i % 10 == 0]
         coordinates = sum(map(list, [fx, fy, sy]), [])
         return torch.tensor(coordinates, dtype=torch.double)
 
