@@ -52,7 +52,7 @@ def module_runner(module_name, serialize_queue, batch_file, driver=None):
     else:
         batch = Batch()
         batch.load(batch_file)
-        gen = (transaction for item in batch.items for transaction in module.process(item, driver=driver))
+        gen = module.process_batch(batch, driver=driver)
     i = 0
     for transaction in gen:
         serialize_queue.put(transaction)
@@ -60,19 +60,20 @@ def module_runner(module_name, serialize_queue, batch_file, driver=None):
 
 class Scheduler:
     def __init__(self, settings_file):
+        with open(settings_file, 'r') as infile:
+            self.settings = json.load(infile)
+        self.max_workers = self.settings['scheduler:max_workers']
         self.transaction_queue = Queue()
         self.indep_serialize_queue = Queue()
         self.serialize_queue   = Queue()
         self.schedule_queue    = Queue()
         self.driver_process    = Process(target=driver_listener,  args=(self.transaction_queue, settings_file))
-        sizes = {'__default__' : 10}
-        self.indep_batch_process     = Process(target=batch_serializer, args=(self.indep_serialize_queue, self.transaction_queue, self.schedule_queue, sizes))
-        self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, sizes))
+        self.sizes = self.settings['batch_sizes']
+        self.indep_batch_process     = Process(target=batch_serializer, args=(self.indep_serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
+        self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
         self.dependents        = defaultdict(list)
         self.workers           = []
         self.waiting           = []
-        with open(settings_file, 'r') as infile:
-            self.max_workers = json.load(infile)['scheduler:max_workers']
         with open('.dependencies.json', 'r') as infile:
             self.dependencies = json.load(infile)
         self.driver_creator = (Driver, settings_file)

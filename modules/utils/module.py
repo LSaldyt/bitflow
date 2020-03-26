@@ -17,13 +17,16 @@ class Module:
     def custom_transaction(self, *args, **kwargs):
         return Transaction(*args, **kwargs)
 
-    def process(self, node):
+    def process(self, node, driver=None):
         pass
+
+    def process_batch(self, batch, driver=None):
+        for item in batch.items:
+            for transaction in self.process(item, driver=driver):
+                yield transaction
 
     def __str__(self):
         if self.in_label is None:
             return '{}: ({})'.format(self.name, self.out_label)
         else:
             return '{}: ({}) -> ({})'.format(self.name, self.in_label, self.out_label)
-        # if self.connect_labels is not None:
-        #     return '{}: {} <-[{}, {}]-> {}'.format(self.name, self.in_label, *self.connect_labels, self.out_label)
