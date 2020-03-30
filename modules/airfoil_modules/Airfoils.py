@@ -135,3 +135,5 @@ class Airfoils(Module):
             yield self.default_transaction({'name' : name, 'detail_files': detail_files, 'coord_file' : coord_file, **detail_page})
         except ValueError:
             pass
+        except ConnectionError:
+            pass

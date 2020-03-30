@@ -15,9 +15,9 @@ from time import sleep
 from PIL import Image
 
 class EdgeRegressorModel(nn.Module):
-    def __init__(self, depth=1, activation=nn.ReLU, out_size=60, mid_channels=8):
+    def __init__(self, depth=1, activation=nn.ReLU, out_size=120, mid_channels=8):
         nn.Module.__init__(self)
-        self.norm = nn.BatchNorm2d(4)
+        # self.norm = nn.BatchNorm2d(4)
         self.conv_layers = []
         for i in range(depth):
             if i == 0:
@@ -26,11 +26,11 @@ class EdgeRegressorModel(nn.Module):
                 channels = 8
             self.conv_layers.append(nn.Sequential(
                 nn.Conv2d(channels, mid_channels, 3, padding=1),
-                nn.Conv2d(mid_channels, mid_channels, 3, padding=1),
-                nn.BatchNorm2d(mid_channels),
+                # nn.Conv2d(mid_channels, mid_channels, 3, padding=1),
+                # nn.BatchNorm2d(mid_channels),
                 activation()
                 ))
-            if i < 4 and i > 1:
+            if i < 2:
                 self.conv_layers.append(nn.MaxPool2d(2))
         self.prefinal = nn.Sequential(
             nn.Linear(56 * 56 * mid_channels, 1000),
@@ -38,15 +38,13 @@ class EdgeRegressorModel(nn.Module):
         self.final = nn.Sequential(nn.Linear(1000, out_size))
 
     def forward(self, x):
-        x = self.norm(x)
+        # x = self.norm(x)
         for layer in self.conv_layers:
             x = layer(x)
         x = x.view(-1, 56 * 56 * 8)
         x = self.prefinal(x)
         x = self.final(x)
         x = x.double()
-        print('Output:')
-        print(x.size())
         return x
 
 class AirfoilEdgeRegressor(OnlineTorchLearner):
@@ -67,15 +65,15 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         with open(parent['coord_file'], 'rb') as infile:
             coordinates = pickle.load(infile)
         fx, fy, sx, sy, camber = coordinates
-        fx = [x for i, x in enumerate(fx) if i % 10 == 0]
-        fy = [y for i, y in enumerate(fy) if i % 10 == 0]
-        sy = [y for i, y in enumerate(sy) if i % 10 == 0]
+        fx = [x for i, x in enumerate(fx) if i % 5 == 0]
+        fy = [y for i, y in enumerate(fy) if i % 5 == 0]
+        sy = [y for i, y in enumerate(sy) if i % 5 == 0]
         coordinates = sum(map(list, [fx, fy, sy]), [])
         labels = torch.tensor(coordinates, dtype=torch.double)
         return labels.unsqueeze(0)
 
     def init_model(self):
-        self.model = EdgeRegressorModel(depth=6)
+        self.model = EdgeRegressorModel(depth=3)
 
     def transform(self, node):
         try:
@@ -100,8 +98,6 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         inputs = torch.cat(input_list)
         labels = torch.cat(label_list)
         outputs = self.model(inputs)
-        print('Labels:')
-        print(labels.size())
         loss = self.criterion(outputs, labels)
         loss.backward()
         self.optimizer.step()
