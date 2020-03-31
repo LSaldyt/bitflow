@@ -16,11 +16,10 @@ import json
 from driver import Driver
 
 def save_batch(schedule_queue, transaction_queue, label, batch):
-    filename = 'data/batches/{}'.format(uuid4())
-    batch.save(filename)
+    batch.save()
     batch.clear()
-    transaction_queue.put((label, filename))
-    schedule_queue.put((label, filename))
+    transaction_queue.put(batch)
+    schedule_queue.put(batch)
 
 def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     start = time()
@@ -35,23 +34,22 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         batch.add(transaction)
         max_length = sizes.get(label, sizes['__default__'])
         if len(batch) >= max_length:
+            batch = batches.pop(label)
             save_batch(schedule_queue, transaction_queue, label, batch)
         duration = time() - start
         i += 1
 
-def module_runner(module_name, serialize_queue, batch_file, driver=None):
+def module_runner(module_name, serialize_queue, batch, driver=None):
     module = fetch(module_name)
 
     if module.out_label is None:
-        batch = Batch(module.in_label)
-        batch.load(batch_file)
+        batch.load()
         module.process_batch(batch, driver=driver)
     else:
-        if batch_file is None:
+        if batch is None:
             gen = module.process(driver=driver)
         else:
-            batch = Batch(module.in_label)
-            batch.load(batch_file)
+            batch.load()
             gen = module.process_batch(batch, driver=driver)
         i = 0
         for transaction in gen:
@@ -70,7 +68,6 @@ def pager(name, label, schedule_queue, driver_creator, delay):
     while True:
         count = next(driver.run_query(matcher + 'WITH COUNT (n) AS count RETURN count').records())['count']
         if count > 0:
-            print(count, flush=True)
             for i in range(count // page_size):
                 page_query = matcher + 'RETURN (n) SKIP {} LIMIT {}'.format(i * page_size, page_size)
                 pages = driver.run_query(page_query).records()
@@ -80,10 +77,9 @@ def pager(name, label, schedule_queue, driver_creator, delay):
                     uuid     = page['n']['uuid']
                     if batch_counts[uuid] < module.epochs:
                         batch_counts[uuid] += 1
-                        schedule_queue.put((label, filename))
+                        schedule_queue.put(Batch(label, uuid))
                     else:
-                        print('Max epochs', flush=True)
-
+                        pass
         sleep(delay)
 
 class Scheduler:
@@ -164,18 +160,14 @@ class Scheduler:
                 break
         while not self.schedule_queue.empty():
             if len(self.workers) < self.max_workers:
-                label, batch_file = self.schedule_queue.get(block=False)
-                print('Got scheduled batch for ', label, flush=True)
-                if label is not None:
-                    for sublabel in label.split(':'):
-                        print(sublabel, flush=True)
-                        for dependent in self.dependents[sublabel]:
-                            print(dependent, flush=True)
-                            dep_proc = (dependent, Process(target=module_runner, args=(dependent, self.serialize_queue, batch_file, self.driver_creator)))
-                            if len(self.workers) < self.max_workers and self.check_limit(dependent):
-                                self.add_proc(dep_proc)
-                            else:
-                                self.waiting.append(dep_proc)
+                batch = self.schedule_queue.get(block=False)
+                for sublabel in batch.label.split(':'):
+                    for dependent in self.dependents[sublabel]:
+                        dep_proc = (dependent, Process(target=module_runner, args=(dependent, self.serialize_queue, batch, self.driver_creator)))
+                        if len(self.workers) < self.max_workers and self.check_limit(dependent):
+                            self.add_proc(dep_proc)
+                        else:
+                            self.waiting.append(dep_proc)
             else:
                 break
         return False
