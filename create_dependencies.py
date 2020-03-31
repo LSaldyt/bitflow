@@ -9,7 +9,9 @@ def create_dependencies():
         module = fetch(name)
         in_type  = module.in_label
         out_type = module.out_label
-        dependencies[name] = (in_type, out_type)
+        page_batches = module.page_batches
+
+        dependencies[name] = (in_type, out_type, page_batches)
     with open('.dependencies.json', 'w') as outfile:
         json.dump(dependencies, outfile, indent=4)
 

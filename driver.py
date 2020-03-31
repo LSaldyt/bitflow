@@ -22,6 +22,10 @@ class Driver():
         self.hset = set()
         self.lset = set()
 
+    def run_query(self, query):
+        with self.neo_client.session() as session:
+            return session.run(query)
+
     def run(self, transaction):
         if transaction.query is not None:
             with self.neo_client.session() as session:
