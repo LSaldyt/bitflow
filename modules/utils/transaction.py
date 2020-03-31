@@ -6,7 +6,6 @@ class Transaction:
     def __init__(self, in_label=None, out_label=None, connect_labels=None, data=None, query=None, uuid=None, from_uuid=None):
         if uuid is None and data is not None:
             uuid = uuid4()
-            # uuid = str(hashlib.md5(','.join(map(str, sorted(data.items()))).encode('utf-8')).hexdigest())
         self.in_label       = in_label
         self.out_label      = out_label
         self.connect_labels = connect_labels
@@ -14,7 +13,7 @@ class Transaction:
         self.query          = query
         self.uuid           = uuid
         self.from_uuid      = from_uuid
-        if self.data is not None:
+        if self.data is not None and 'uuid' not in self.data:
             self.data['uuid'] = str(self.uuid)
 
     def __repr__(self):

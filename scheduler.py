@@ -15,7 +15,7 @@ import json
 
 from driver import Driver
 
-def save_batch(schedule_queue, transaction_queue, label, batch):
+def save_batch(schedule_queue, transaction_queue, batch):
     batch.save()
     batch.clear()
     transaction_queue.put(batch)
@@ -34,8 +34,8 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         batch.add(transaction)
         max_length = sizes.get(label, sizes['__default__'])
         if len(batch) >= max_length:
-            batch = batches.pop(label)
-            save_batch(schedule_queue, transaction_queue, label, batch)
+            save_batch(schedule_queue, transaction_queue, batch)
+            batches.pop(label)
         duration = time() - start
         i += 1
 
@@ -72,12 +72,12 @@ def pager(name, label, schedule_queue, driver_creator, delay):
                 page_query = matcher + 'RETURN (n) SKIP {} LIMIT {}'.format(i * page_size, page_size)
                 pages = driver.run_query(page_query).records()
                 for page in pages:
-                    filename = page['n']['filename']
                     label    = page['n']['label']
                     uuid     = page['n']['uuid']
+                    rand     = page['n']['rand']
                     if batch_counts[uuid] < module.epochs:
                         batch_counts[uuid] += 1
-                        schedule_queue.put(Batch(label, uuid))
+                        schedule_queue.put(Batch(label, uuid=uuid, rand=rand))
                     else:
                         pass
         sleep(delay)

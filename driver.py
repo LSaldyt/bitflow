@@ -76,6 +76,7 @@ def driver_listener(transaction_queue, settings_file):
     while True:
         batch = transaction_queue.get()
         batch.load()
+        driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
         for transaction in batch.items:
             try:
                 added = driver.run(transaction)
@@ -90,4 +91,3 @@ def driver_listener(transaction_queue, settings_file):
             except Exception as e:
                 print(e, flush=True)
                 print(transaction, flush=True)
-        driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'uuid' : batch.uuid}))

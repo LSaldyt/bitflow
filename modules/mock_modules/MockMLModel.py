@@ -11,8 +11,5 @@ class MockMLModel(Module):
         pass
 
     def process_batch(self, batch, driver=None):
-        print('*' * 80)
-        print('!MockMLModel', flush=True)
-        print(batch, flush=True)
-        print('*' * 80)
+        print(batch.uuid, flush=True)
 
