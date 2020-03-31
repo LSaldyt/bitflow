@@ -45,9 +45,9 @@ class AirfoilTester(AirfoilEdgeRegressor):
         fx = coordinates[:40]
         fy = coordinates[40:80]
         sy = coordinates[80:120]
-        # fx = smooth(fx, 5)
-        # fy = smooth(fy, 5)
-        # sy = smooth(sy, 5)
+        fx = smooth(fx, 2)
+        fy = smooth(fy, 2)
+        sy = smooth(sy, 2)
         plt.plot(fx, fy, color='red')
         plt.plot(fx, sy, color='blue')
         plt.plot([fx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
