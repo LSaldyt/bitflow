@@ -1,6 +1,7 @@
 from multiprocessing import Process, Queue, Pool, Manager
 from queue import Empty
 from collections import defaultdict
+from collections import Counter
 from time import sleep, time
 from uuid import uuid4
 from pprint import pprint
@@ -38,7 +39,6 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         duration = time() - start
         i += 1
 
-
 def module_runner(module_name, serialize_queue, batch_file, driver=None):
     module = fetch(module_name)
 
@@ -61,8 +61,10 @@ def module_runner(module_name, serialize_queue, batch_file, driver=None):
 def pager(name, label, schedule_queue, driver_creator, delay):
     driver_constructor, settings_file = driver_creator
     driver = driver_constructor(settings_file)
+    module = fetch(name)
 
-    page_size = 100
+    batch_counts = Counter()
+    page_size = 10
     matcher = 'MATCH (n:Batch) WHERE n.label = \'{}\' '.format(label)
 
     while True:
@@ -76,8 +78,12 @@ def pager(name, label, schedule_queue, driver_creator, delay):
                     filename = page['n']['filename']
                     label    = page['n']['label']
                     uuid     = page['n']['uuid']
-                    print('Pager queued batch for ', name, flush=True)
-                    schedule_queue.put((label, filename))
+                    if batch_counts[uuid] < module.epochs:
+                        batch_counts[uuid] += 1
+                        schedule_queue.put((label, filename))
+                    else:
+                        print('Max epochs', flush=True)
+
         sleep(delay)
 
 class Scheduler:

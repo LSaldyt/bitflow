@@ -5,5 +5,5 @@ class MockMLData(Module):
         Module.__init__(self, in_label=in_label, out_label=out_label, connect_labels=connect_labels, name=name)
 
     def process(self, driver=None):
-        for i in range(1000):
+        for i in range(100):
             yield self.default_transaction({'num' : i})
