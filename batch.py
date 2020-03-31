@@ -1,9 +1,10 @@
 import pickle
 
 class Batch:
-    def __init__(self):
+    def __init__(self, label):
         self.items = []
         self.length = 0
+        self.label = label
 
     def __len__(self):
         return self.length

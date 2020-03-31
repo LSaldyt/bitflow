@@ -8,6 +8,7 @@ from collections import defaultdict
 from time import sleep, time
 from queue import Empty
 
+from modules.utils.transaction import Transaction
 from batch import Batch
 
 class Driver():
@@ -69,8 +70,8 @@ def driver_listener(transaction_queue, settings_file):
     driver = Driver(settings_file)
     i = 0
     while True:
-        batch_file = transaction_queue.get()
-        batch = Batch()
+        label, batch_file = transaction_queue.get()
+        batch = Batch(label)
         batch.load(batch_file)
         for transaction in batch.items:
             try:
@@ -86,3 +87,4 @@ def driver_listener(transaction_queue, settings_file):
             except Exception as e:
                 print(e, flush=True)
                 print(transaction, flush=True)
+        driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch_file}))

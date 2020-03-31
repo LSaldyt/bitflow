@@ -18,7 +18,7 @@ def save_batch(schedule_queue, transaction_queue, label, batch):
     filename = 'data/batches/{}'.format(uuid4())
     batch.save(filename)
     batch.clear()
-    transaction_queue.put(filename)
+    transaction_queue.put((label, filename))
     schedule_queue.put((label, filename))
 
 def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
@@ -26,20 +26,15 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     batches = dict()
     i = 0
     while True:
-        # try:
         transaction = serialize_queue.get()
         label = transaction.out_label
         if label not in batches:
-            batches[label] = Batch()
+            batches[label] = Batch(label)
         batch = batches[label]
         batch.add(transaction)
         max_length = sizes.get(label, sizes['__default__'])
         if len(batch) >= max_length:
             save_batch(schedule_queue, transaction_queue, label, batch)
-        # except Empty:
-        #     for label, batch in batches.items():
-        #         if len(batch) > 0:
-        #             save_batch(schedule_queue, transaction_queue, label, batch)
         duration = time() - start
         i += 1
 
@@ -50,7 +45,7 @@ def module_runner(module_name, serialize_queue, batch_file, driver=None):
     if batch_file is None:
         gen = module.process(driver=driver)
     else:
-        batch = Batch()
+        batch = Batch(module.in_label)
         batch.load(batch_file)
         gen = module.process_batch(batch, driver=driver)
     i = 0
@@ -110,14 +105,11 @@ class Scheduler:
         self.workers.append((dependent, process))
 
     def check_limit(self, dependent):
-        # print('Checking limit for ', dependent, flush=True)
         count = 0
         for name, worker in self.workers:
             if name == dependent:
                 count += 1
-        # print(count, ' already running', flush=True)
         upper = self.limits.get(dependent, self.limits['__default__'])
-        # print('Upper limit: ', upper, flush=True)
         return count < upper
 
     def check(self):
