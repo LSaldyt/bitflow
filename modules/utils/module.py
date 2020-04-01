@@ -21,6 +21,7 @@ class Module:
         pass
 
     def process_batch(self, batch, driver=None):
+        print('Batch default', flush=True)
         for item in batch.items:
             for transaction in self.process(item, driver=driver):
                 yield transaction

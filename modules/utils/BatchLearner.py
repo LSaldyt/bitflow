@@ -43,6 +43,7 @@ class BatchLearner(Module):
         raise RuntimeError('Called process() for Batch Module')
 
     def process_batch(self, batch, driver=None):
+        print(batch.uuid, flush=True)
         if self.driver is None:
             constructor, config = driver
             self.driver = constructor(config)

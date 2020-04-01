@@ -49,6 +49,7 @@ class Driver():
         return True
 
     def link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
+        print(in_label, flush=True)
         query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\' MERGE (n)-[:{from_label}]->(m) MERGE (m)-[:{to_label}]->(n)'.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2, from_label=from_label, to_label=to_label))
         tx.run(query)
 
@@ -76,8 +77,9 @@ def driver_listener(transaction_queue, settings_file):
     while True:
         batch = transaction_queue.get()
         batch.load()
-        driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
         for transaction in batch.items:
+            print('Adding: ', flush=True)
+            print(transaction, flush=True)
             try:
                 added = driver.run(transaction)
                 duration = time() - start
@@ -91,3 +93,4 @@ def driver_listener(transaction_queue, settings_file):
             except Exception as e:
                 print(e, flush=True)
                 print(transaction, flush=True)
+        driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))

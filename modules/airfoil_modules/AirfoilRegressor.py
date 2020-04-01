@@ -25,7 +25,7 @@ class AirfoilModel(nn.Module):
         self.fc3 = nn.Linear(width, outputs)
 
     def forward(self, x):
-        print(x.size())
+        print(x.size(), flush=True)
         x = F.selu(self.fc1(x))
         for inner in self.inner:
             x = F.selu(inner(x))
@@ -46,7 +46,7 @@ class AirfoilRegressor(BatchTorchLearner):
         BatchTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', out_label='AirfoilMetrics', name=name, filename=filename)
 
     def init_model(self):
-        self.model = AirfoilModel(1000 + 3 + 3, 4)
+        self.model = AirfoilModel(1000 + 3 + 3, 4, hidden=5)
 
     def read_node(self, node):
         coord_file  = node.data['coord_file']
