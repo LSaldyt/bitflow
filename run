@@ -1,4 +1,3 @@
 #!/bin/bash
 
-python create_dependencies.py
 python pipeline.py $1

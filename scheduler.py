@@ -13,8 +13,7 @@ from utils.utils import fetch
 import json
 
 from driver import Driver
-
-from log import Log
+from modules.utils.log import Log
 
 def save_batch(schedule_queue, transaction_queue, batch):
     batch.save()

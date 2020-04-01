@@ -1,4 +1,5 @@
 from .transaction import Transaction
+from .log import Log
 
 class Module:
     def __init__(self, in_label=None, out_label=None, connect_labels=None, name='Default', page_batches=False):
@@ -7,6 +8,7 @@ class Module:
         self.connect_labels = connect_labels
         self.name = name
         self.page_batches = page_batches
+        self.log = Log(name, directory='modules')
 
     def default_transaction(self, data, uuid=None, from_uuid=None):
         return Transaction(in_label=self.in_label, out_label=self.out_label, connect_labels=self.connect_labels, data=data, uuid=uuid, from_uuid=from_uuid)

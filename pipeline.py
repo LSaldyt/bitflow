@@ -8,7 +8,8 @@ import shutil
 from utils.utils import get_module_names, fetch
 
 from scheduler import Scheduler
-from log import Log
+from modules.utils.log import Log
+from create_dependencies import create_dependencies
 
 class PipelineInterface:
     '''
@@ -45,7 +46,10 @@ class PipelineInterface:
                 k = k.replace('pipeline:', '')
                 setattr(self, k, v)
 
-    def start_server(self):
+    def start_server(self, clean=True):
+        if clean:
+            self.clean()
+        print('STARTING PeTaL Data Pipeline Server', flush=True)
         self.log.log('Starting pipeline server')
         start = time()
         self.reload_modules() 
@@ -62,11 +66,19 @@ class PipelineInterface:
                     self.load_settings()
                     self.reload_modules()
                     self.log.log('Actively reloading settings')
+        except KeyboardInterrupt as interrupt:
+            print('INTERRUPTING PeTaL Data Pipeline Server', flush=True)
         finally:
-            print('STOPPING server!', flush=True)
+            print('STOPPING PeTaL Data Pipeline Server', flush=True)
             self.scheduler.stop()
-            # shutil.rmtree('data/batches')
-            # os.mkdir('data/batches')
+
+    def clean(self):
+        shutil.rmtree('data/batches')
+        os.mkdir('data/batches')
+        shutil.rmtree('logs')
+        os.mkdir('logs')
+        with open('logs/.placeholder', 'w') as outfile:
+            outfile.write('')
 
 if __name__ == '__main__':
     args = sys.argv[1:]
@@ -74,6 +86,8 @@ if __name__ == '__main__':
         settings_file = 'configurations/default.json'
     else:
         settings_file = args[0]
+    print('LOADING PeTaL config ({})'.format(settings_file), flush=True)
+    create_dependencies()
     interface = PipelineInterface(settings_file)
     interface.log.log('Loaded settings from ', settings_file)
-    interface.start_server()
+    interface.start_server(clean=True)
