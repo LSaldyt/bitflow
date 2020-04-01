@@ -25,7 +25,6 @@ class AirfoilModel(nn.Module):
         self.fc3 = nn.Linear(width, outputs)
 
     def forward(self, x):
-        print(x.size(), flush=True)
         x = F.selu(self.fc1(x))
         for inner in self.inner:
             x = F.selu(inner(x))
@@ -43,7 +42,7 @@ class AirfoilRegressor(BatchTorchLearner):
     def __init__(self, name='AirfoilRegressor', filename='data/models/airfoil_regressor.nn'):
         # Take Airfoils as input, and produce no outputs.
         optimizer_kwargs = dict(lr=0.0001, momentum=0.9)
-        BatchTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', out_label='AirfoilMetrics', name=name, filename=filename)
+        BatchTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', out_label='AirfoilMetrics', name=name, filename=filename, train_fraction=0.0, validate_fraction=0.0, test_fraction=1.0)
 
     def init_model(self):
         self.model = AirfoilModel(1000 + 3 + 3, 4, hidden=5)
@@ -66,10 +65,10 @@ class AirfoilRegressor(BatchTorchLearner):
             regime_vec = [mach, Re, Ncrit]
 
             coefficient_tuples = list(zip(*(details[k] for k in sorted(details.keys()) if k.startswith('C'))))
+            coefficient_keys   = [k for k in sorted(details.keys()) if k.startswith('C')]
             alphas = details['alpha']
             limits = list(zip(details['Top_Xtr'], details['Bot_Xtr']))
-
-            yield coordinates, coefficient_tuples, alphas, limits, regime_vec
+            yield coordinates, coefficient_tuples, coefficient_keys, alphas, limits, regime_vec
 
     def transform(self, node):
         for coordinates, coefficient_tuples, alphas, limits, regime_vec in self.read_node(node):
@@ -80,11 +79,16 @@ class AirfoilRegressor(BatchTorchLearner):
                 yield inputs.unsqueeze(0), coefficients.unsqueeze(0)
 
     def test(self, batch):
+        print('Testing AirfoilRegressor', flush=True)
         for node in batch.items:
-            for coordinates, coefficient_tuples, alphas, limits, regime_vec in self.read_node(node):
+            for coordinates, coefficient_tuples, coefficient_keys, alphas, limits, regime_vec in self.read_node(node):
                 coordinates = sum(map(list, coordinates), [])
                 for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
                     coefficients = torch.Tensor(coefficients)
                     inputs       = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
-                    metrics = self.model(inputs)
-                    yield self.default_transaction(data=dict(metrics=metrics))
+                    with torch.no_grad():
+                        metrics = self.model(inputs)
+                    data = dict()
+                    for i, key in enumerate(coefficient_keys):
+                        data[key] = metrics[i].item()
+                    yield self.default_transaction(data=data)
