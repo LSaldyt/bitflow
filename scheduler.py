@@ -107,7 +107,6 @@ class Scheduler:
     def schedule(self, module_name):
         print('Scheduling ', module_name, flush=True)
         in_label, out_label, page = self.dependencies[module_name]
-        print(page)
         if page:
             print('Paging database for ', module_name, flush=True)
             self.pagers.append(Process(target=pager, args=(module_name, in_label, self.schedule_queue, self.driver_creator, self.settings['pager_delay'])))

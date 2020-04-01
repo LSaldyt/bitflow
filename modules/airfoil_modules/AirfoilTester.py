@@ -36,24 +36,26 @@ class AirfoilTester(AirfoilEdgeRegressor):
         plt.plot([fx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
         plt.plot([fx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
 
-        with open(base, 'rb') as infile:
-            base_coords = pickle.load(infile)
-        fx, fy, sx, sy, camber = base_coords
-        plt.plot(fx, fy, color='black')
-        plt.plot(sx, sy, color='black')
-        plt.plot([sx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
-        plt.plot([sx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
+        # with open(base, 'rb') as infile:
+        #     base_coords = pickle.load(infile)
+        # fx, fy, sx, sy, camber = base_coords
+        # plt.plot(fx, fy, color='black')
+        # plt.plot(sx, sy, color='black')
+        # plt.plot([sx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
+        # plt.plot([sx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
         plt.axis('off')
         plt.show()
-        yield self.default_transaction(dict())
 
     def process(self, driver=None):
-        location = 'data/images/c141e-il - LOCKHEED C-141 BL761.11 AIRFOILfcafb389-f948-4050-a7cf-a1c23df4056d.png'
-        base = 'data/airfoil_data/wb140-il - WB-140_35_FB 14%_coords.pkl'
-        base = 'data/airfoil_data/2032c-il - 20-32C AIRFOIL_coords.pkl'
-        base = 'data/airfoil_data/c141e-il - LOCKHEED C-141 BL761.11 AIRFOIL_coords.pkl'
+        # location = 'data/images/c141e-il - LOCKHEED C-141 BL761.11 AIRFOILfcafb389-f948-4050-a7cf-a1c23df4056d.png'
+        location = 'data/whale_flipper_cross_section.png'
+        # base = 'data/airfoil_data/wb140-il - WB-140_35_FB 14%_coords.pkl'
+        # base = 'data/airfoil_data/2032c-il - 20-32C AIRFOIL_coords.pkl'
+        # base = 'data/airfoil_data/c141e-il - LOCKHEED C-141 BL761.11 AIRFOIL_coords.pkl'
         
         image = self.load_image(location)
         coordinates = self.model(image).detach().numpy()[0]
+        self.plot(coordinates)
+        return []
 
         

@@ -1,4 +1,4 @@
-from ..utils.OnlineTorchLearner import OnlineTorchLearner
+from ..utils.BatchTorchLearner import BatchTorchLearner
 
 from pprint import pprint
 
@@ -21,17 +21,18 @@ class AirfoilModel(nn.Module):
         nn.Module.__init__(self)
         self.hidden = hidden
         self.fc1 = nn.Linear(inputs, width)
-        self.fc2 = nn.Linear(width, width)
+        self.inner = [nn.Linear(width, width) for i in range(hidden)]
         self.fc3 = nn.Linear(width, outputs)
 
     def forward(self, x):
+        print(x.size())
         x = F.selu(self.fc1(x))
-        for i in range(self.hidden):
-            x = F.selu(self.fc2(x))
+        for inner in self.inner:
+            x = F.selu(inner(x))
         x = self.fc3(x)
         return x
 
-class AirfoilRegressor(OnlineTorchLearner):
+class AirfoilRegressor(BatchTorchLearner):
     '''
     Regress the performance of airfoil geometries
     Implements the `Module` interface, which requires a type signature and process() function.
@@ -42,7 +43,7 @@ class AirfoilRegressor(OnlineTorchLearner):
     def __init__(self, name='AirfoilRegressor', filename='data/models/airfoil_regressor.nn'):
         # Take Airfoils as input, and produce no outputs.
         optimizer_kwargs = dict(lr=0.0001, momentum=0.9)
-        OnlineTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', name=name, filename=filename)
+        BatchTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', out_label='AirfoilMetrics', name=name, filename=filename)
 
     def init_model(self):
         self.model = AirfoilModel(1000 + 3 + 3, 4)
@@ -76,4 +77,14 @@ class AirfoilRegressor(OnlineTorchLearner):
             for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
                 coefficients = torch.Tensor(coefficients)
                 inputs       = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
-                yield inputs, coefficients
+                yield inputs.unsqueeze(0), coefficients.unsqueeze(0)
+
+    def test(self, batch):
+        for node in batch.items:
+            for coordinates, coefficient_tuples, alphas, limits, regime_vec in self.read_node(node):
+                coordinates = sum(map(list, coordinates), [])
+                for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
+                    coefficients = torch.Tensor(coefficients)
+                    inputs       = torch.Tensor(coordinates + regime_vec + [top, bot, alpha])
+                    metrics = self.model(inputs)
+                    yield self.default_transaction(data=dict(metrics=metrics))

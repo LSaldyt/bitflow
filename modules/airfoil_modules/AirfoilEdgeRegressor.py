@@ -13,6 +13,19 @@ import json, os, os.path, pickle
 
 from time import sleep
 from PIL import Image
+import matplotlib.pyplot as plt
+
+DPI = 400
+
+def smooth(array, amount):
+    new = []
+    running = 0
+    for i, x in enumerate(array):
+        running += x
+        if i % amount == 0:
+            new.append(running/amount)
+            running = 0
+    return new
 
 class EdgeRegressorModel(nn.Module):
     def __init__(self, depth=1, activation=nn.ReLU, out_size=120, mid_channels=8):
@@ -74,11 +87,41 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
     def init_model(self):
         self.model = EdgeRegressorModel(depth=3)
 
+    # def learn() inherited, uses transform()
     def transform(self, node):
-        try:
-            labels = self.load_labels(node.data['parent'])
-            image  = self.load_image(filename = node.data['filename'])
-            yield image, labels
-        except ValueError as e:
-            print(e)
-            pass
+        labels = self.load_labels(node.data['parent'])
+        image  = self.load_image(filename = node.data['filename'])
+        yield image, labels
+
+    def test(self, batch):
+        print('Testing on ', batch.uuid, flush=True)
+        for node in batch.items:
+            image  = self.load_image(filename=node.data['filename'])
+            coordinates = self.model(image).detach().numpy()[0]
+            figsize  = (800/DPI, 200/DPI)
+            plt.figure(figsize=figsize, dpi=DPI)
+            fx = coordinates[:40]
+            fy = coordinates[40:80]
+            sy = coordinates[80:120]
+            fx = smooth(fx, 2)
+            fy = smooth(fy, 2)
+            sy = smooth(sy, 2)
+            plt.plot(fx, fy, color='red')
+            plt.plot(fx, sy, color='blue')
+            plt.plot([fx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
+            plt.plot([fx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
+
+            parent = node.data['parent']
+            parent = self.driver.get(parent)
+            with open(parent['coord_file'], 'rb') as infile:
+                base_coords = pickle.load(infile)
+            fx, fy, sx, sy, camber = base_coords
+            plt.plot(fx, fy, color='black')
+            plt.plot(sx, sy, color='black')
+            plt.plot([sx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
+            plt.plot([sx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
+            plt.axis('off')
+            plt.show()
+
+    def val(self, batch):
+        print('Validating on ', batch.uuid, flush=True)

@@ -31,12 +31,7 @@ class BatchLearner(Module):
             self.model = pickle.load(infile)
 
     def learn(self, batch):
-        if os.path.isfile(self.filename):
-            self.load()
-        for node in batch.items:
-            self.learn(node)
-        self.save()
-        return []
+        print('Learning on ', batch.uuid, flush=True)
 
     def test(self, batch):
         print('Testing on ', batch.uuid, flush=True)
@@ -52,9 +47,12 @@ class BatchLearner(Module):
             constructor, config = driver
             self.driver = constructor(config)
         if batch.rand < self.train_fraction:
-            self.learn(batch)
+            gen = self.learn(batch)
         elif batch.rand < self.train_fraction + self.test_fraction:
-            self.test(batch)
+            gen = self.test(batch)
         else:
-            self.val(batch)
+            gen = self.val(batch)
+        if self.out_label is not None and gen is not None:
+            for transaction in gen:
+                yield transaction
 
