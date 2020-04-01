@@ -78,8 +78,6 @@ def driver_listener(transaction_queue, settings_file):
         batch = transaction_queue.get()
         batch.load()
         for transaction in batch.items:
-            print('Adding: ', flush=True)
-            print(transaction, flush=True)
             try:
                 added = driver.run(transaction)
                 duration = time() - start

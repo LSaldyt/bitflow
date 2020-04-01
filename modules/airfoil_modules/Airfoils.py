@@ -121,7 +121,6 @@ class Airfoils(Module):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
     def process(self, transaction, driver=None):
-        print('Airfoil', flush=True)
         url  = transaction.data['url']
         name = transaction.data['name']
         try:
@@ -133,10 +132,10 @@ class Airfoils(Module):
                 with open(detail_file, 'wb') as outfile:
                     pickle.dump(detail_page.pop('data'), outfile)
                 detail_files.append(detail_file)
-            transaction = self.default_transaction({'name' : name, 'detail_files': detail_files, 'coord_file' : coord_file, **detail_page})
-            print(transaction, flush=True)
-            yield transaction
+            yield self.default_transaction({'name' : name, 'detail_files': detail_files, 'coord_file' : coord_file, **detail_page})
         except ValueError as e:
-            print(e, flush=True)
+            pass
+            # print(e, flush=True)
         except ConnectionError as e:
-            print(e, flush=True)
+            pass
+            # print(e, flush=True)
