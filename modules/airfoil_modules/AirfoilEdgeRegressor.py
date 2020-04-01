@@ -1,4 +1,4 @@
-from ..utils.OnlineTorchLearner import OnlineTorchLearner
+from ..utils.BatchTorchLearner import BatchTorchLearner
 
 import torch
 import torch.nn as nn
@@ -47,10 +47,9 @@ class EdgeRegressorModel(nn.Module):
         x = x.double()
         return x
 
-class AirfoilEdgeRegressor(OnlineTorchLearner):
+class AirfoilEdgeRegressor(BatchTorchLearner):
     def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
-        self.driver = None
-        OnlineTorchLearner.__init__(self, nn.MSELoss, optim.Adadelta, dict(lr=1.0, rho=0.9, eps=1e-06, weight_decay=0), in_label='AugmentedAirfoilPlot', name=name, filename=filename)
+        BatchTorchLearner.__init__(self, filename=filename, epochs=2, train_fraction=0.8, test_fraction=0.15, validate_fraction=0.05, criterion=nn.MSELoss, optimizer=optim.Adadelta, optimizer_kwargs=dict(lr=1.0, rho=0.9, eps=1e-06, weight_decay=0), in_label='AugmentedAirfoilPlot', name=name)
 
     def load_image(self, filename):
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
@@ -83,33 +82,3 @@ class AirfoilEdgeRegressor(OnlineTorchLearner):
         except ValueError as e:
             print(e)
             pass
-
-    def process(self, node, driver=None):
-        1/0
-
-    def learn(self, items):
-        input_list = []
-        label_list = []
-        for node in items:
-            for inputs, labels in self.transform(node):
-                input_list.append(inputs)
-                label_list.append(labels)
-        self.optimizer.zero_grad()
-        inputs = torch.cat(input_list)
-        labels = torch.cat(label_list)
-        outputs = self.model(inputs)
-        loss = self.criterion(outputs, labels)
-        loss.backward()
-        self.optimizer.step()
-        print('{} loss: '.format(self.name), loss.item(), flush=True)
-
-    def process_batch(self, batch, driver=None):
-        print('Batch:', len(batch.items), flush=True)
-        if self.driver is None:
-            self.driver = driver[0](driver[1])
-        if os.path.isfile(self.filename):
-            self.load()
-        self.learn(batch.items)
-        self.save()
-        return []
-

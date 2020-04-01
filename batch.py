@@ -8,14 +8,14 @@ class Batch:
         self.label    = label
         if uuid is None:
             self.uuid = str(uuid4())
-            print('Creating new UUID: ', self.uuid, flush=True)
+            # print('Creating new UUID: ', self.uuid, flush=True)
         else:
             self.uuid = uuid
-            print('Assigning new UUID: ', self.uuid, flush=True)
+            # print('Assigning new UUID: ', self.uuid, flush=True)
         self.filename = 'data/batches/' + str(self.uuid)
         if rand is None:
             self.rand = random()
-            print('Creating new rand: ', self.uuid, flush=True)
+            # print('Creating new rand: ', self.uuid, flush=True)
         else:
             self.rand = rand
 

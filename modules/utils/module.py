@@ -1,12 +1,11 @@
 from .transaction import Transaction
 
 class Module:
-    def __init__(self, in_label=None, out_label=None, connect_labels=None, page_batches=False, name='Default', count=1):
+    def __init__(self, in_label=None, out_label=None, connect_labels=None, name='Default', page_batches=False):
         self.in_label      = in_label
         self.out_label     = out_label
         self.connect_labels = connect_labels
         self.name = name
-        self.count = count
         self.page_batches = page_batches
 
     def default_transaction(self, data, uuid=None, from_uuid=None):

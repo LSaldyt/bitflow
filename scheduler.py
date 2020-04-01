@@ -107,16 +107,22 @@ class Scheduler:
     def schedule(self, module_name):
         print('Scheduling ', module_name, flush=True)
         in_label, out_label, page = self.dependencies[module_name]
+        print(page)
         if page:
             print('Paging database for ', module_name, flush=True)
             self.pagers.append(Process(target=pager, args=(module_name, in_label, self.schedule_queue, self.driver_creator, self.settings['pager_delay'])))
-            self.dependents[in_label].append(module_name)
+            self.add_dependents(in_label, module_name)
         elif in_label is None:
             print('Starting ', module_name, flush=True)
             self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.driver_creator))))
         else:
             print('Added dependent: ', module_name, flush=True)
-            self.dependents[in_label].append(module_name)
+            self.add_dependents(in_label, module_name)
+
+    def add_dependents(self, in_label, module_name):
+        for label in in_label.split(','):
+            for sublabel in label.split(':'):
+                self.dependents[sublabel].append(module_name)
 
     def start(self):
         self.driver_process.start()
@@ -134,6 +140,7 @@ class Scheduler:
         for name, process in self.workers:
             process.terminate()
         for pager in self.pagers:
+            print(pager)
             pager.terminate()
 
     def add_proc(self, dep_proc):

@@ -19,27 +19,10 @@ def smooth(array, amount):
 class AirfoilTester(AirfoilEdgeRegressor):
     def __init__(self):
         AirfoilEdgeRegressor.__init__(self)
-        Module.__init__(self, in_label=None, out_label='BioAirfoil')
+        Module.__init__(self, in_label=None, out_label='FitAirfoil:Airfoil')
         self.load() # Load trained weights
 
-    def process(self, driver=None):
-        # location = 'data/images/wb140-il - WB-140_35_FB 14%bc5c2a11-84ea-418e-8385-c84917788dac_augmented_1_0.png'
-        # location = 'data/images/wb140-il - WB-140_35_FB 14%bc5c2a11-84ea-418e-8385-c84917788dac.png'
-        # location = 'data/images/2032c-il - 20-32C AIRFOIL2cbd1921-6f37-4ae3-a149-a88eeef1edae_augmented_0_7.png'
-        # location = 'data/images/2032c-il - 20-32C AIRFOIL2cbd1921-6f37-4ae3-a149-a88eeef1edae.png'
-        # location = 'data/images/ah80136-il - AH 80-136cfc274da-fff3-4cb6-bcc0-6e7bffe2459a_augmented_3_40.png'
-        location = 'data/images/c141e-il - LOCKHEED C-141 BL761.11 AIRFOILfcafb389-f948-4050-a7cf-a1c23df4056d.png'
-        base = 'data/airfoil_data/wb140-il - WB-140_35_FB 14%_coords.pkl'
-        base = 'data/airfoil_data/2032c-il - 20-32C AIRFOIL_coords.pkl'
-        # base = 'data/airfoil_data/ah80136-il - AH 80-136_coords.pkl'
-        base = 'data/airfoil_data/c141e-il - LOCKHEED C-141 BL761.11 AIRFOIL_coords.pkl'
-        
-        # location = 'data/whale_flipper_cross_section.png'
-        
-        image = self.load_image(location)
-        coordinates = self.model(image).detach().numpy()[0]
-
-        
+    def plot(self, coordinates):
         figsize  = (800/DPI, 200/DPI)
         plt.figure(figsize=figsize, dpi=DPI)
         fx = coordinates[:40]
@@ -63,3 +46,14 @@ class AirfoilTester(AirfoilEdgeRegressor):
         plt.axis('off')
         plt.show()
         yield self.default_transaction(dict())
+
+    def process(self, driver=None):
+        location = 'data/images/c141e-il - LOCKHEED C-141 BL761.11 AIRFOILfcafb389-f948-4050-a7cf-a1c23df4056d.png'
+        base = 'data/airfoil_data/wb140-il - WB-140_35_FB 14%_coords.pkl'
+        base = 'data/airfoil_data/2032c-il - 20-32C AIRFOIL_coords.pkl'
+        base = 'data/airfoil_data/c141e-il - LOCKHEED C-141 BL761.11 AIRFOIL_coords.pkl'
+        
+        image = self.load_image(location)
+        coordinates = self.model(image).detach().numpy()[0]
+
+        
