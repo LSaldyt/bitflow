@@ -1,5 +1,6 @@
 
-import os, datetime
+import os
+from datetime import datetime
 
 LOG_DIR = 'logs/'
 
@@ -21,6 +22,7 @@ class Log:
             with open(self.path, 'w') as outfile:
                 outfile.write('')
 
-    def log(self, message, end='\n'):
+    def log(self, *messages, end='\n'):
         with open(self.path, 'a') as outfile:
-            outfile.write(message + end)
+            for message in messages:
+                outfile.write(str(message) + end)

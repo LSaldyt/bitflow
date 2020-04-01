@@ -4,7 +4,6 @@ from collections import defaultdict
 from collections import Counter
 from time import sleep, time
 from uuid import uuid4
-from pprint import pprint
 
 from driver import driver_listener
 from batch import Batch
@@ -14,6 +13,8 @@ from utils.utils import fetch
 import json
 
 from driver import Driver
+
+from log import Log
 
 def save_batch(schedule_queue, transaction_queue, batch):
     batch.save()
@@ -103,19 +104,20 @@ class Scheduler:
         with open('.dependencies.json', 'r') as infile:
             self.dependencies = json.load(infile)
         self.driver_creator = (Driver, settings_file)
+        self.log = Log('scheduler')
 
     def schedule(self, module_name):
-        print('Scheduling ', module_name, flush=True)
+        self.log.log('Scheduling ', module_name)
         in_label, out_label, page = self.dependencies[module_name]
         if page:
-            print('Paging database for ', module_name, flush=True)
+            self.log.log('Paging database for ', module_name)
             self.pagers.append(Process(target=pager, args=(module_name, in_label, self.schedule_queue, self.driver_creator, self.settings['pager_delay'])))
             self.add_dependents(in_label, module_name)
         elif in_label is None:
-            print('Starting ', module_name, flush=True)
+            self.log.log('Starting ', module_name)
             self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.driver_creator))))
         else:
-            print('Added dependent: ', module_name, flush=True)
+            self.log.log('Added dependent: ', module_name)
             self.add_dependents(in_label, module_name)
 
     def add_dependents(self, in_label, module_name):
@@ -139,12 +141,12 @@ class Scheduler:
         for name, process in self.workers:
             process.terminate()
         for pager in self.pagers:
-            print(pager)
+            self.log.log(pager)
             pager.terminate()
 
     def add_proc(self, dep_proc):
         dependent, process = dep_proc
-        print('Starting dependent', dependent, flush=True)
+        self.log.log('Starting dependent', dependent)
         process.start()
         self.workers.append((dependent, process))
 

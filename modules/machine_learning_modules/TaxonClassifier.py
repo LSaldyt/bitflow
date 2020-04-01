@@ -1,4 +1,5 @@
 from ..utils.OnlineTorchLearner import OnlineTorchLearner
+from ..utils.silence import silence
 
 import torch
 import torch.nn as nn
@@ -18,13 +19,16 @@ import json, os, os.path
 from time import sleep
 
 
+
+
 class HierarchicalModel(nn.Module):
     def __init__(self, i=0, outputs=1, width=1):
         nn.Module.__init__(self)
         if i < 0 or i > 7:
             raise ValueError('Parameter i to Efficient Net Model must be between 0 and 7 inclusive, but was: {}'.format(i))
         # Top-1 Accuracy ranges from 76.3% to 84.4%, in intervals of roughly 1-2% between indexes
-        self.feature_extractor = EfficientNetBase.from_pretrained('efficientnet-b{}'.format(i)) # Can go up to b7, with b0 having the least parameters, and b7 having the most (but more accuracy)
+        with silence():
+            self.feature_extractor = EfficientNetBase.from_pretrained('efficientnet-b{}'.format(i)) # Can go up to b7, with b0 having the least parameters, and b7 having the most (but more accuracy)
         self.fc1 = nn.Linear(1280 * 7 * 7, 1000)
         self.fc2 = nn.Linear(1000, 500)
 

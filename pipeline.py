@@ -8,12 +8,14 @@ import shutil
 from utils.utils import get_module_names, fetch
 
 from scheduler import Scheduler
+from log import Log
 
 class PipelineInterface:
     '''
     This class defines an interface to a data mining server. It allows modules and settings to the scheduler to be updated dynamically without stopping processing.
     '''
     def __init__(self, filename):
+        self.log = Log('pipeline_server')
         self.scheduler = Scheduler(settings_file)
         self.times = dict()
         self.filename = filename
@@ -34,7 +36,7 @@ class PipelineInterface:
     def load_settings(self):
         with open(self.filename, 'r') as infile:
             settings = json.load(infile)
-        # pprint(settings)
+        self.log.log(settings)
         for k, v in settings.items():
             if k.startswith('scheduler:'):
                 k = k.replace('scheduler:', '')
@@ -44,10 +46,10 @@ class PipelineInterface:
                 setattr(self, k, v)
 
     def start_server(self):
-        print('Starting pipeline server', flush=True)
+        self.log.log('Starting pipeline server')
         start = time()
         self.reload_modules() 
-        print('Starting scheduler', flush=True)
+        self.log.log('Starting scheduler')
         self.scheduler.start()
         done = False
         try:
@@ -59,7 +61,7 @@ class PipelineInterface:
                     start = time()
                     self.load_settings()
                     self.reload_modules()
-                    print('Actively reloading settings', flush=True)
+                    self.log.log('Actively reloading settings')
         finally:
             print('STOPPING server!', flush=True)
             self.scheduler.stop()
@@ -72,6 +74,6 @@ if __name__ == '__main__':
         settings_file = 'configurations/default.json'
     else:
         settings_file = args[0]
-    print('Loading settings from ', settings_file, flush=True)
     interface = PipelineInterface(settings_file)
+    interface.log.log('Loaded settings from ', settings_file)
     interface.start_server()
