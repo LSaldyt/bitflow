@@ -31,19 +31,19 @@ class BatchLearner(Module):
             self.model = pickle.load(infile)
 
     def learn(self, batch):
-        print('Learning on ', batch.uuid, flush=True)
+        self.log.log('Learning on ', batch.uuid)
 
     def test(self, batch):
-        print('Testing on ', batch.uuid, flush=True)
+        self.log.log('Testing on ', batch.uuid)
 
     def val(self, batch):
-        print('Validating on ', batch.uuid, flush=True)
+        self.log.log('Validating on ', batch.uuid)
 
     def process(self, node, driver=None):
         raise RuntimeError('Called process() for Batch Module')
 
     def process_batch(self, batch, driver=None):
-        print(batch.uuid, flush=True)
+        self.log.log('Processing ', batch.uuid)
         if self.driver is None:
             constructor, config = driver
             self.driver = constructor(config)

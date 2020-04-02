@@ -10,8 +10,6 @@ from torchvision import transforms
 
 from PIL import Image
 
-from pprint import pprint
-
 from efficientnet_pytorch import EfficientNet as EfficientNetBase
 
 import json, os, os.path
@@ -82,7 +80,6 @@ class TaxonClassifier(OnlineTorchLearner):
         return labels
 
     def transform(self, node):
-        print('TaxonClassifier:', node, flush=True)
         labels = self.load_labels(node)
         image  = self.load_image(node)
         yield image, labels
@@ -106,7 +103,6 @@ class TaxonClassifier(OnlineTorchLearner):
     def learn(self, node):
         for inputs, labels in self.transform(node):
             loss = self.step(inputs, labels)
-            # pprint(self.label_map)
             print('{} loss: '.format(self.name), loss, flush=True)
 
     def process(self, node, driver=None):

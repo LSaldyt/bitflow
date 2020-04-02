@@ -1,5 +1,3 @@
-from pprint import pprint
-
 import numpy as np
 from time import sleep
 from PIL import Image, ImageDraw, ImageOps

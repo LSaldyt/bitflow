@@ -1,6 +1,4 @@
 from uuid import uuid4
-import hashlib
-from pprint import pprint
 
 class Transaction:
     def __init__(self, in_label=None, out_label=None, connect_labels=None, data=None, query=None, uuid=None, from_uuid=None):

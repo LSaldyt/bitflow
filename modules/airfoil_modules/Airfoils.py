@@ -4,7 +4,6 @@ import time
 import pickle
 import random
 from uuid import uuid4
-from pprint import pprint
 from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
@@ -134,8 +133,6 @@ class Airfoils(Module):
                 detail_files.append(detail_file)
             yield self.default_transaction({'name' : name, 'detail_files': detail_files, 'coord_file' : coord_file, **detail_page})
         except ValueError as e:
-            pass
-            # print(e, flush=True)
+            self.log.log(e)
         except ConnectionError as e:
-            pass
-            # print(e, flush=True)
+            self.log.log(e)

@@ -7,8 +7,6 @@ import torch.optim as optim
 from torch.utils import data
 from torchvision import transforms
 
-from pprint import pprint
-
 import json, os, os.path, pickle
 
 from time import sleep
@@ -94,7 +92,7 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
         yield image, labels
 
     def test(self, batch):
-        print('Testing on ', batch.uuid, flush=True)
+        self.log.log('Testing on ')
         for node in batch.items:
             image  = self.load_image(filename=node.data['filename'])
             coordinates = self.model(image).detach().numpy()[0]
@@ -124,4 +122,4 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
             plt.show()
 
     def val(self, batch):
-        print('Validating on ', batch.uuid, flush=True)
+        self.log.log('Validating on ', batch.uuid)

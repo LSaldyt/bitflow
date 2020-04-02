@@ -1,14 +1,22 @@
 from .transaction import Transaction
 from .log import Log
+from .profile import Profile
 
 class Module:
     def __init__(self, in_label=None, out_label=None, connect_labels=None, name='Default', page_batches=False):
-        self.in_label      = in_label
-        self.out_label     = out_label
+        self.name           = name
+        self.in_label       = in_label
+        self.out_label      = out_label
         self.connect_labels = connect_labels
-        self.name = name
-        self.page_batches = page_batches
-        self.log = Log(name, directory='modules')
+        self.page_batches   = page_batches
+        self.log            = Log(name, directory='modules')
+
+    def __enter__(self):
+        self.profile = Profile(self.name, directory='modules')
+        return self
+
+    def __exit__(self, *args):
+        self.profile.close()
 
     def default_transaction(self, data, uuid=None, from_uuid=None):
         return Transaction(in_label=self.in_label, out_label=self.out_label, connect_labels=self.connect_labels, data=data, uuid=uuid, from_uuid=from_uuid)

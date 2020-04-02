@@ -33,7 +33,7 @@ class BatchTorchLearner(BatchLearner):
         except PermissionError:
             sleep(1)
         except FileNotFoundError:
-            print('Weight file {} not found, starting from scratch'.format(self.filename))
+            self.log.log('Weight file {} not found, starting from scratch'.format(self.filename))
 
     def transform(self, node):
         '''
@@ -58,4 +58,4 @@ class BatchTorchLearner(BatchLearner):
         loss = self.criterion(outputs, labels)
         loss.backward()
         self.optimizer.step()
-        print('{} loss: '.format(self.name), loss.item(), flush=True)
+        self.log.log('{} loss: '.format(self.name), loss.item(), flush=True)

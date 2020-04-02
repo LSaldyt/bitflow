@@ -1,7 +1,5 @@
 from ..utils.BatchTorchLearner import BatchTorchLearner
 
-from pprint import pprint
-
 import pickle
 import os
 import math
@@ -79,7 +77,7 @@ class AirfoilRegressor(BatchTorchLearner):
                 yield inputs.unsqueeze(0), coefficients.unsqueeze(0)
 
     def test(self, batch):
-        print('Testing AirfoilRegressor', flush=True)
+        self.log.log('Testing AirfoilRegressor')
         for node in batch.items:
             for coordinates, coefficient_tuples, coefficient_keys, alphas, limits, regime_vec in self.read_node(node):
                 coordinates = sum(map(list, coordinates), [])

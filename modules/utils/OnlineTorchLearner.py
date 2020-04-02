@@ -49,9 +49,9 @@ class OnlineTorchLearner(OnlineLearner):
         except PermissionError:
             sleep(1)
         except FileNotFoundError:
-            print('Weight file {} not found, starting from scratch'.format(self.filename))
+            self.log.log('Weight file {} not found, starting from scratch'.format(self.filename))
 
     def learn(self, node):
         for inputs, labels in self.transform(node):
             loss = self.step(inputs, labels)
-            print('{} loss: '.format(self.name), loss, flush=True)
+            self.log.log('{} loss: '.format(self.name), loss, flush=True)

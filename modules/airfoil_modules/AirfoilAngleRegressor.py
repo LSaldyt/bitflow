@@ -1,11 +1,6 @@
 from .AirfoilRegressor import AirfoilRegressor, AirfoilModel
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-
-from pprint import pprint
 
 class AirfoilAngleRegressor(AirfoilRegressor):
     '''

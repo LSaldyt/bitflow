@@ -40,21 +40,18 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         i += 1
 
 def module_runner(module_name, serialize_queue, batch, driver=None):
-    module = fetch(module_name)
-
-    if module.out_label is None:
-        batch.load()
-        module.process_batch(batch, driver=driver)
-    else:
-        if batch is None:
-            gen = module.process(driver=driver)
-        else:
+    with fetch(module_name) as module:
+        if module.out_label is None:
             batch.load()
-            gen = module.process_batch(batch, driver=driver)
-        i = 0
-        for transaction in gen:
-            serialize_queue.put(transaction)
-            i += 1
+            module.process_batch(batch, driver=driver)
+        else:
+            if batch is None:
+                gen = module.process(driver=driver)
+            else:
+                batch.load()
+                gen = module.process_batch(batch, driver=driver)
+            for transaction in gen:
+                serialize_queue.put(transaction)
 
 def pager(name, label, schedule_queue, driver_creator, delay):
     driver_constructor, settings_file = driver_creator
@@ -140,7 +137,6 @@ class Scheduler:
         for name, process in self.workers:
             process.terminate()
         for pager in self.pagers:
-            self.log.log(pager)
             pager.terminate()
 
     def add_proc(self, dep_proc):

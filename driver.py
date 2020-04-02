@@ -1,5 +1,4 @@
 from neo4j import GraphDatabase, basic_auth
-from pprint import pprint
 import json
 import neobolt
 
@@ -8,6 +7,8 @@ from collections import defaultdict
 from time import sleep, time
 from queue import Empty
 
+from modules.utils.log import Log
+from modules.utils.profile import Profile
 from modules.utils.transaction import Transaction
 from batch import Batch
 
@@ -49,7 +50,6 @@ class Driver():
         return True
 
     def link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
-        print(in_label, flush=True)
         query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\' MERGE (n)-[:{from_label}]->(m) MERGE (m)-[:{to_label}]->(n)'.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2, from_label=from_label, to_label=to_label))
         tx.run(query)
 
@@ -71,6 +71,9 @@ class Driver():
         return list(records)[0]['count']
 
 def driver_listener(transaction_queue, settings_file):
+    profile = Profile('driver')
+    log     = Log('driver')
+
     start = time()
     driver = Driver(settings_file)
     i = 0
@@ -82,13 +85,11 @@ def driver_listener(transaction_queue, settings_file):
                 added = driver.run(transaction)
                 duration = time() - start
                 total = len(driver.hset) + len(driver.lset)
-                print('Driver rate: {} of {} ({}|{})\r'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)), flush=True, end='')
+                log.log('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)))
 
                 if added:
                     i += 1
-            except KeyboardInterrupt:
-                raise KeyboardInterrupt
             except Exception as e:
-                print(e, flush=True)
-                print(transaction, flush=True)
+                log.log(e) 
+                log.log(transaction)
         driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
