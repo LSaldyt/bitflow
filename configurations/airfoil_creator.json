@@ -11,4 +11,4 @@
  "pipeline:reload_time" : 30,
  "pipeline:status_time" : 1,
  "pipeline:blacklist" : [],
- "pipeline:whitelist" : ["Airfoils", "AirfoilList", "AirfoilRegressor", "AirfoilAugmentor", "AirfoilEdgeRegressor", "AirfoilPlotter", "AirfoilCreator"]}
+ "pipeline:whitelist" : ["Airfoils", "AirfoilList", "AirfoilCreator"]}
