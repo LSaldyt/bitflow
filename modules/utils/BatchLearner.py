@@ -44,9 +44,7 @@ class BatchLearner(Module):
 
     def process_batch(self, batch, driver=None):
         self.log.log('Processing ', batch.uuid)
-        if self.driver is None:
-            constructor, config = driver
-            self.driver = constructor(config)
+        self.driver = self.get_driver(driver=driver)
         if batch.rand < self.train_fraction:
             gen = self.learn(batch)
         elif batch.rand < self.train_fraction + self.test_fraction:

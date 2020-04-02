@@ -71,7 +71,7 @@ class OptimizedCatalog(Module):
         for filename in os.listdir('.'):
             if filename.endswith('.csv'):
                 shutil.copy(filename, self.import_dir + filename)
-        driver = driver[0](driver[1])
+        driver = self.get_driver(driver=driver)
 
         with driver.neo_client.session() as session:
              headers = 'id,identifier,datasetID,datasetName,acceptedNameUsageID,parentNameUsageID,taxonomicStatus,taxonRank,verbatimTaxonRank,scientificName,kingdom,phylum,class,order,superfamily,family,genericName,genus,subgenus,specificEpithet,infraspecificEpithet,scientificNameAuthorship,source,namePublishedIn,nameAccordingTo,modified,description,taxonConceptID,scientificNameID,references,name'.split(',')

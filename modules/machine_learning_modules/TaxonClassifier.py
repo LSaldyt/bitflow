@@ -106,8 +106,7 @@ class TaxonClassifier(OnlineTorchLearner):
             print('{} loss: '.format(self.name), loss, flush=True)
 
     def process(self, node, driver=None):
-        if self.driver is None:
-            self.driver = driver[0](driver[1])
+        self.driver = self.get_driver(driver=driver)
         if os.path.isfile(self.filename):
             self.load()
         self.learn(node)

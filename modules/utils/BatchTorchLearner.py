@@ -10,8 +10,6 @@ from torchvision import transforms
 
 from time import sleep
 
-import plotly.graph_objs as go
-
 class BatchTorchLearner(BatchLearner):
     '''
     Base class for pytorch machine learning modules
@@ -20,7 +18,6 @@ class BatchTorchLearner(BatchLearner):
         BatchLearner.__init__(self, **kwargs)
         self.criterion = criterion()
         self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
-        self.iteration = 0
 
     def save(self):
         torch.save(self.model.state_dict(), self.filename)
@@ -63,8 +60,3 @@ class BatchTorchLearner(BatchLearner):
         loss.backward()
         self.optimizer.step()
         self.log.log('{} loss: '.format(self.name), loss.item())
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=[iteration], y=[loss.item()]))
-        fig.show()
-        iteration += 1

@@ -5,8 +5,11 @@ from datetime import datetime
 LOG_DIR = 'logs/'
 
 def make_directory(basename, directory=None):
-    if not os.path.isdir(basename):
-        os.mkdir(basename)
+    try:
+        if not os.path.isdir(basename):
+            os.mkdir(basename)
+    except FileExistsError:
+        pass
     if directory is not None:
         directory = basename + directory + '/'
         if not os.path.isdir(directory):

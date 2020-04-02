@@ -23,7 +23,6 @@ class AirfoilCreator(AirfoilRegressor):
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
             inputs  = torch.Tensor(list(coefficients) + regime_vec + [top, bot, alpha])
             outputs = torch.Tensor(coordinates)
-            break
             yield inputs, outputs
 
 
