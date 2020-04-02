@@ -20,6 +20,7 @@ class BatchTorchLearner(BatchLearner):
         BatchLearner.__init__(self, **kwargs)
         self.criterion = criterion()
         self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
+        self.iteration = 0
 
     def save(self):
         torch.save(self.model.state_dict(), self.filename)
@@ -61,10 +62,9 @@ class BatchTorchLearner(BatchLearner):
         loss = self.criterion(outputs, labels)
         loss.backward()
         self.optimizer.step()
-        print(loss.item(), flush=True)
-        self.log.log('{} loss: '.format(self.name), loss.item(), flush=True)
+        self.log.log('{} loss: '.format(self.name), loss.item())
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=[1], y=[loss.item()]))
+        fig.add_trace(go.Scatter(x=[iteration], y=[loss.item()]))
         fig.show()
-        
+        iteration += 1
