@@ -61,8 +61,10 @@ class EdgeRegressorModel(nn.Module):
 class AirfoilEdgeRegressor(BatchTorchLearner):
     def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
         BatchTorchLearner.__init__(self, filename=filename, epochs=2, train_fraction=0.8, test_fraction=0.15, validate_fraction=0.05, criterion=nn.MSELoss, optimizer=optim.Adadelta, optimizer_kwargs=dict(lr=1.0, rho=0.9, eps=1e-06, weight_decay=0), in_label='AugmentedAirfoilPlot', name=name)
+        self.log.log('Created AirfoilEdgeRegressor')
 
     def load_image(self, filename):
+        self.log.log('Loading Image')
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
         image = Image.open(filename)
         image.putalpha(255)
@@ -71,6 +73,7 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
         return img
 
     def load_labels(self, parent):
+        self.log.log('Loading Labels')
         parent = self.driver.get(parent)
         with open(parent['coord_file'], 'rb') as infile:
             coordinates = pickle.load(infile)
@@ -83,12 +86,15 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
         return labels.unsqueeze(0)
 
     def init_model(self):
+        self.log.log('Initializing Module')
         self.model = EdgeRegressorModel(depth=3)
 
     # def learn() inherited, uses transform()
     def transform(self, node):
+        self.log.log('Transforming')
         labels = self.load_labels(node.data['parent'])
         image  = self.load_image(filename = node.data['filename'])
+        self.log.log('Yielding data')
         yield image, labels
 
     def test(self, batch):

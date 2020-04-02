@@ -28,9 +28,11 @@ class Module:
         return Transaction(*args, **kwargs)
 
     def process(self, node, driver=None):
-        pass
+        raise NotImplementedError()
 
     def process_batch(self, batch, driver=None):
+        print('Base batch ', self.name, flush=True)
+        self.log.log('Calling base: ', batch.uuid)
         for item in batch.items:
             for transaction in self.process(item, driver=driver):
                 yield transaction

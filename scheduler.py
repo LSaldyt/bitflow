@@ -41,19 +41,18 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
 
 def module_runner(module_name, serialize_queue, batch, driver=None):
     with fetch(module_name) as module:
-        if module.out_label is None:
-            batch.load()
-            module.process_batch(batch, driver=driver)
+        if batch is None:
+            module.log.log('Backbone run ')
+            gen = module.process(driver=driver)
         else:
-            if batch is None:
-                gen = module.process(driver=driver)
-            else:
-                batch.load()
-                gen = module.process_batch(batch, driver=driver)
-            for transaction in gen:
-                serialize_queue.put(transaction)
+            module.log.log('Batched returning run with ', batch.label)
+            batch.load()
+            gen = module.process_batch(batch, driver=driver)
+        for transaction in gen:
+            serialize_queue.put(transaction)
 
 def pager(name, label, schedule_queue, driver_creator, delay):
+    log = Log(name=name, directory='paging')
     driver_constructor, settings_file = driver_creator
     driver = driver_constructor(settings_file)
     module = fetch(name)
@@ -74,6 +73,7 @@ def pager(name, label, schedule_queue, driver_creator, delay):
                     rand     = page['n']['rand']
                     if batch_counts[uuid] < module.epochs:
                         batch_counts[uuid] += 1
+                        log.log('Scheduled page: ', str(uuid))
                         schedule_queue.put(Batch(label, uuid=uuid, rand=rand))
                     else:
                         pass
@@ -141,7 +141,7 @@ class Scheduler:
 
     def add_proc(self, dep_proc):
         dependent, process = dep_proc
-        self.log.log('Starting dependent', dependent)
+        self.log.log('Starting dependent ', dependent, ' ', process)
         process.start()
         self.workers.append((dependent, process))
 
@@ -174,3 +174,7 @@ class Scheduler:
             else:
                 break
         return False
+
+    def status(self):
+        print('STATUS OK\r', end='', flush=True)
+        # print(self.transaction_queue.qsize(), flush=True)

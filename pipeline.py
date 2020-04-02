@@ -21,6 +21,7 @@ class PipelineInterface:
         self.filename = filename
         self.sleep_time = 1
         self.reload_time = 30
+        self.status_time = 1
         self.whitelist = []
         self.blacklist = []
         self.load_settings()
@@ -60,6 +61,8 @@ class PipelineInterface:
                 done = self.scheduler.check()
                 sleep(self.sleep_time)
                 duration = time() - start
+                if duration > self.status_time:
+                    self.scheduler.status()
                 if duration > self.reload_time:
                     start = time()
                     self.load_settings()
@@ -72,12 +75,11 @@ class PipelineInterface:
             self.scheduler.stop()
 
     def clean(self):
-        shutil.rmtree('data/batches')
-        os.mkdir('data/batches')
-        shutil.rmtree('logs')
-        os.mkdir('logs')
-        with open('logs/.placeholder', 'w') as outfile:
-            outfile.write('')
+        for directory in ['logs', 'profiles']:
+            shutil.rmtree(directory)
+            os.mkdir(directory)
+            with open(directory + '/.placeholder', 'w') as outfile:
+                outfile.write('')
 
 if __name__ == '__main__':
     args = sys.argv[1:]

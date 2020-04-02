@@ -15,14 +15,16 @@ class AirfoilCreator(AirfoilRegressor):
         AirfoilRegressor.__init__(self, filename=filename)
 
     def init_model(self):
-        self.model = AirfoilModel(4 + 3 + 3, 800) # Reverse of AirfoilRegressor's default
+        self.model = AirfoilModel(4 + 3 + 3, 1000) # Reverse of AirfoilRegressor's default
 
     def transform(self, node):
-        coordinates, coefficient_tuples, alphas, limits, regime_vec = self.read_node(node)
+        coordinates, coefficient_tuples, coefficient_keys, alphas, limits, regime_vec = self.read_node(node)
         coordinates = sum(map(list, coordinates), [])
         for alpha, coefficients, (top, bot) in zip(alphas, coefficient_tuples, limits):
             inputs  = torch.Tensor(list(coefficients) + regime_vec + [top, bot, alpha])
             outputs = torch.Tensor(coordinates)
+            break
             yield inputs, outputs
+
 
 

@@ -13,7 +13,7 @@ class AirfoilPlotter(Module):
     Plot a mined airfoil
     '''
     def __init__(self, name='AirfoilPlotter'):
-        Module.__init__(self, in_label='Airfoil', out_label='CleanAirfoilPlot:Image', connect_labels=('image', 'image'), name=name)
+        Module.__init__(self, in_label='Airfoil', out_label='CleanAirfoilPlot', connect_labels=('image', 'image'), name=name)
 
     def process(self, node, driver=None):
         coord_file  = node.data['coord_file']

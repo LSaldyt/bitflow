@@ -93,3 +93,4 @@ def driver_listener(transaction_queue, settings_file):
                 log.log(e) 
                 log.log(transaction)
         driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
+        print('Created batch for ', batch.label, flush=True)

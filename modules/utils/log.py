@@ -34,8 +34,11 @@ def get_path(basename, name, directory=None, ending='.log'):
 class Log:
     def __init__(self, name, directory=None):
         self.path = get_path(LOG_DIR, name, directory=directory)
+        self.name = name
 
     def log(self, *messages, end='\n'):
+        # print(self.name, ': ', *messages, flush=True)
         with open(self.path, 'a') as outfile:
             for message in messages:
-                outfile.write(str(message) + end)
+                outfile.write(str(message))
+            outfile.write(end)

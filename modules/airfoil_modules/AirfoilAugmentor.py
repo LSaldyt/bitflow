@@ -8,7 +8,7 @@ from ..utils.module import Module
 
 class AirfoilAugmentor(Module):
     def __init__(self, count=50):
-        Module.__init__(self, in_label='CleanAirfoilPlot', out_label='AugmentedAirfoilPlot:Image', connect_labels=('augmented_image', 'augmented_image'))
+        Module.__init__(self, in_label='CleanAirfoilPlot', out_label='AugmentedAirfoilPlot', connect_labels=('augmented_image', 'augmented_image'))
         self.count = count
 
     def random_color(self):
