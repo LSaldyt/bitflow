@@ -83,14 +83,13 @@ def driver_listener(transaction_queue, settings_file):
         for transaction in batch.items:
             try:
                 added = driver.run(transaction)
-                duration = time() - start
-                total = len(driver.hset) + len(driver.lset)
-                log.log('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)))
-
                 if added:
                     i += 1
             except Exception as e:
                 log.log(e) 
                 log.log(transaction)
         driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
-        print('Created batch for ', batch.label, flush=True)
+        duration = time() - start
+        total = len(driver.hset) + len(driver.lset)
+        log.log('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)))
+        log.log('Created batch for ', batch.label)

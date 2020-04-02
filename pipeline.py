@@ -62,7 +62,7 @@ class PipelineInterface:
                 sleep(self.sleep_time)
                 duration = time() - start
                 if duration > self.status_time:
-                    self.scheduler.status()
+                    self.scheduler.status(duration)
                 if duration > self.reload_time:
                     start = time()
                     self.load_settings()

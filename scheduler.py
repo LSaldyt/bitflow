@@ -51,14 +51,13 @@ def module_runner(module_name, serialize_queue, batch, driver=None):
         for transaction in gen:
             serialize_queue.put(transaction)
 
-def pager(name, label, schedule_queue, driver_creator, delay):
+def pager(name, label, serialize_queue, driver_creator, delay, page_size):
     log = Log(name=name, directory='paging')
     driver_constructor, settings_file = driver_creator
     driver = driver_constructor(settings_file)
     module = fetch(name)
 
     batch_counts = Counter()
-    page_size = 10
     matcher = 'MATCH (n:Batch) WHERE n.label = \'{}\' '.format(label)
 
     while True:
@@ -73,8 +72,10 @@ def pager(name, label, schedule_queue, driver_creator, delay):
                     rand     = page['n']['rand']
                     if batch_counts[uuid] < module.epochs:
                         batch_counts[uuid] += 1
-                        log.log('Scheduled page: ', str(uuid))
-                        schedule_queue.put(Batch(label, uuid=uuid, rand=rand))
+                        log.log('Running page: ', str(uuid))
+                        batch = Batch(label, uuid=uuid, rand=rand)
+                        module_runner(name, serialize_queue, batch, driver=driver)
+                        # schedule_queue.put(Batch(label, uuid=uuid, rand=rand))
                     else:
                         pass
         sleep(delay)
@@ -107,7 +108,7 @@ class Scheduler:
         in_label, out_label, page = self.dependencies[module_name]
         if page:
             self.log.log('Paging database for ', module_name)
-            self.pagers.append(Process(target=pager, args=(module_name, in_label, self.schedule_queue, self.driver_creator, self.settings['pager_delay'])))
+            self.pagers.append(Process(target=pager, args=(module_name, in_label, self.serialize_queue, self.driver_creator, self.settings['pager_delay'], self.settings['page_size'])))
             self.add_dependents(in_label, module_name)
         elif in_label is None:
             self.log.log('Starting ', module_name)
@@ -175,6 +176,23 @@ class Scheduler:
                 break
         return False
 
-    def status(self):
-        print('STATUS OK\r', end='', flush=True)
-        # print(self.transaction_queue.qsize(), flush=True)
+    def status(self, duration):
+        running = dict()
+        for dep, _ in self.workers:
+            if dep in running:
+                running[dep] += 1
+            else:
+                running[dep] = 1
+        waiting_counts = dict()
+        for dep, _ in self.waiting:
+            if dep in waiting_counts:
+                waiting_counts[dep] += 1
+            else:
+                waiting_counts[dep] = 1
+
+        running_str = ' '.join('{} ({})'.format(dep, count) for dep, count in sorted(running.items(), key=lambda t : t[0]))
+        waiting_str = ' '.join('{} ({})'.format(dep, count) for dep, count in sorted(waiting_counts.items(), key=lambda t : t[0]))
+        queue_str   = 'transactions : {}, scheduled : {}, waiting : {}'.format(self.transaction_queue.qsize(), self.schedule_queue.qsize(), len(self.waiting))
+        self.log.log('STATUS {}s'.format(round(duration, 2)))
+        self.log.log('  RUNNING {}'.format(running_str))
+        self.log.log('  WAITING {}'.format(waiting_str))
