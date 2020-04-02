@@ -4,11 +4,14 @@ import os
 import sys
 import shutil
 
+from neo4j import GraphDatabase, basic_auth
+
 from utils.utils import get_module_names, fetch
 
 from scheduler import Scheduler
 from modules.utils.log import Log
 from create_dependencies import create_dependencies
+
 
 class PipelineInterface:
     '''
@@ -24,7 +27,8 @@ class PipelineInterface:
         self.status_time = 1
         self.whitelist = []
         self.blacklist = []
-        self.load_settings()
+        self.settings = self.load_settings()
+        self.neo_client = GraphDatabase.driver(self.settings["neo4j_server"], auth=basic_auth(self.settings["username"], self.settings["password"]), encrypted=self.settings["encrypted"])
 
     def reload_modules(self):
         for name in get_module_names():
@@ -45,8 +49,10 @@ class PipelineInterface:
             elif k.startswith('pipeline:'):
                 k = k.replace('pipeline:', '')
                 setattr(self, k, v)
+        return settings
 
     def start_server(self, clean=True):
+        print('CLEANING Old Data', flush=True)
         if clean:
             self.clean()
         print('STARTING PeTaL Data Pipeline Server', flush=True)
@@ -65,7 +71,7 @@ class PipelineInterface:
                     self.scheduler.status(duration)
                 if duration > self.reload_time:
                     start = time()
-                    self.load_settings()
+                    self.settings = self.load_settings()
                     self.reload_modules()
                     self.log.log('Actively reloading settings')
         except KeyboardInterrupt as interrupt:
@@ -75,11 +81,13 @@ class PipelineInterface:
             self.scheduler.stop()
 
     def clean(self):
-        for directory in ['logs', 'profiles']:
+        for directory in ['logs', 'profiles', 'data/batches']:
             shutil.rmtree(directory)
             os.mkdir(directory)
             with open(directory + '/.placeholder', 'w') as outfile:
                 outfile.write('')
+        with self.neo_client.session() as session:
+            session.run('match (n) delete n')
 
 if __name__ == '__main__':
     args = sys.argv[1:]

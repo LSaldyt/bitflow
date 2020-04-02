@@ -16,7 +16,6 @@ class BatchLearner(Module):
         self.init_model()
         if os.path.isfile(self.filename):
             self.load()
-
         self.driver = None
 
     def init_model(self):
@@ -43,6 +42,7 @@ class BatchLearner(Module):
         raise RuntimeError('Called process() for Batch Module')
 
     def process_batch(self, batch, driver=None):
+        self.load()
         self.log.log(self.name, ' Processing ', batch.uuid)
         self.driver = self.get_driver(driver=driver)
         if batch.rand < self.train_fraction:
@@ -54,4 +54,5 @@ class BatchLearner(Module):
         if self.out_label is not None and gen is not None:
             for transaction in gen:
                 yield transaction
+        self.save()
 
