@@ -40,7 +40,7 @@ class AirfoilRegressor(BatchTorchLearner):
     def __init__(self, name='AirfoilRegressor', filename='data/models/airfoil_regressor.nn'):
         # Take Airfoils as input, and produce no outputs.
         optimizer_kwargs = dict(lr=0.0001, momentum=0.9)
-        BatchTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', out_label=None, name=name, filename=filename, train_fraction=0.0, validate_fraction=0.0, test_fraction=1.0)
+        BatchTorchLearner.__init__(self, nn.MSELoss, optim.SGD, optimizer_kwargs, in_label='Airfoil', out_label=None, name=name, filename=filename, train_fraction=0.9, validate_fraction=0.05, test_fraction=0.05)
 
     def init_model(self):
         self.model = AirfoilModel(1000 + 3 + 3, 4, hidden=5)

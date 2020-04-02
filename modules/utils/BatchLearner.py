@@ -43,7 +43,7 @@ class BatchLearner(Module):
         raise RuntimeError('Called process() for Batch Module')
 
     def process_batch(self, batch, driver=None):
-        self.log.log('Processing ', batch.uuid)
+        self.log.log(self.name, ' Processing ', batch.uuid)
         self.driver = self.get_driver(driver=driver)
         if batch.rand < self.train_fraction:
             gen = self.learn(batch)

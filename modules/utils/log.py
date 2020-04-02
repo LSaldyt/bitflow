@@ -40,7 +40,6 @@ class Log:
         self.name = name
 
     def log(self, *messages, end='\n'):
-        # print(self.name, ': ', *messages, flush=True)
         with open(self.path, 'a') as outfile:
             for message in messages:
                 outfile.write(str(message))

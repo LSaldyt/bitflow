@@ -18,20 +18,16 @@ class BatchTorchLearner(BatchLearner):
         BatchLearner.__init__(self, **kwargs)
         self.criterion = criterion()
         self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
+        self.log.log('Calling base batch torch learner')
 
     def save(self):
+        self.log.log('Saving model')
         torch.save(self.model.state_dict(), self.filename)
 
     def load(self):
+        self.log.log('Loading model')
         try:
             self.model.load_state_dict(torch.load(self.filename)) # Takes roughly .15s
-        except RuntimeError:
-            backup = self.filename + '.bak'
-            if os.path.isfile(backup):
-                os.remove(backup) # Removes old backup!
-            os.rename(self.filename, backup)
-        except PermissionError:
-            sleep(1)
         except FileNotFoundError:
             self.log.log('Weight file {} not found, starting from scratch'.format(self.filename))
 
@@ -39,7 +35,7 @@ class BatchTorchLearner(BatchLearner):
         '''
         Must yield a list of tuples of (inputs, labels) for training
         '''
-        pass
+        raise NotImplementedError('')
 
     def step(self, inputs, labels):
         raise RuntimeError('Batch learner called step()')

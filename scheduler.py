@@ -39,17 +39,21 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         duration = time() - start
         i += 1
 
+def run_module(module, serialize_queue, batch, driver=None):
+    if batch is None:
+        module.log.log('Backbone run ', module.name)
+        gen = module.process(driver=driver)
+    else:
+        module.log.log('Batched returning run with ', module.name)
+        batch.load()
+        gen = module.process_batch(batch, driver=driver)
+    for transaction in gen:
+        serialize_queue.put(transaction)
+    module.log.log('Finished queueing transactions from ', module.name)
+
 def module_runner(module_name, serialize_queue, batch, driver=None):
     with fetch(module_name) as module:
-        if batch is None:
-            module.log.log('Backbone run ')
-            gen = module.process(driver=driver)
-        else:
-            module.log.log('Batched returning run with ', batch.label)
-            batch.load()
-            gen = module.process_batch(batch, driver=driver)
-        for transaction in gen:
-            serialize_queue.put(transaction)
+        run_module(module, serialize_queue, batch, driver=driver)
 
 def pager(name, label, serialize_queue, driver_creator, delay, page_size):
     log = Log(name=name, directory='paging')
@@ -74,8 +78,7 @@ def pager(name, label, serialize_queue, driver_creator, delay, page_size):
                         batch_counts[uuid] += 1
                         log.log('Running page: ', str(uuid))
                         batch = Batch(label, uuid=uuid, rand=rand)
-                        module_runner(name, serialize_queue, batch, driver=driver)
-                        # schedule_queue.put(Batch(label, uuid=uuid, rand=rand))
+                        run_module(module, serialize_queue, batch, driver=driver)
                     else:
                         pass
         sleep(delay)
