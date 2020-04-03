@@ -47,8 +47,9 @@ def run_module(module, serialize_queue, batch, driver=None):
         module.log.log('Batched returning run with ', module.name)
         batch.load()
         gen = module.process_batch(batch, driver=driver)
-    for transaction in gen:
-        serialize_queue.put(transaction)
+    if gen is not None:
+        for transaction in gen:
+            serialize_queue.put(transaction)
     module.log.log('Finished queueing transactions from ', module.name)
 
 def module_runner(module_name, serialize_queue, batch, driver=None):

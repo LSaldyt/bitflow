@@ -81,7 +81,7 @@ class PipelineInterface:
             self.scheduler.stop()
 
     def clean(self):
-        for directory in ['logs', 'profiles', 'data/batches']:
+        for directory in ['logs', 'profiles', 'data/batches', 'data/images']:
             shutil.rmtree(directory)
             os.mkdir(directory)
             with open(directory + '/.placeholder', 'w') as outfile:
@@ -99,4 +99,4 @@ if __name__ == '__main__':
     create_dependencies()
     interface = PipelineInterface(settings_file)
     interface.log.log('Loaded settings from ', settings_file)
-    interface.start_server(clean=True)
+    interface.start_server(clean=False)

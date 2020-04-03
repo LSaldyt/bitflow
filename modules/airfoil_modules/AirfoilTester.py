@@ -2,9 +2,7 @@ from .AirfoilEdgeRegressor import AirfoilEdgeRegressor
 from ..utils.module        import Module
 
 import pickle
-import matplotlib.pyplot as plt
-
-DPI = 400
+import plotly.graph_objects as go
 
 def smooth(array, amount):
     new = []
@@ -23,28 +21,20 @@ class AirfoilTester(AirfoilEdgeRegressor):
         self.load() # Load trained weights
 
     def plot(self, coordinates):
-        figsize  = (800/DPI, 200/DPI)
-        plt.figure(figsize=figsize, dpi=DPI)
         fx = coordinates[:40]
         fy = coordinates[40:80]
         sy = coordinates[80:120]
         fx = smooth(fx, 2)
         fy = smooth(fy, 2)
         sy = smooth(sy, 2)
-        plt.plot(fx, fy, color='red')
-        plt.plot(fx, sy, color='blue')
-        plt.plot([fx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
-        plt.plot([fx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
-
-        # with open(base, 'rb') as infile:
-        #     base_coords = pickle.load(infile)
-        # fx, fy, sx, sy, camber = base_coords
-        # plt.plot(fx, fy, color='black')
-        # plt.plot(sx, sy, color='black')
-        # plt.plot([sx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
-        # plt.plot([sx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
-        plt.axis('off')
-        plt.show()
+        print('Creating plotly figure', flush=True)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=fx, y=fy, mode='lines', name='top'))
+        fig.add_trace(go.Scatter(x=fx, y=sy, mode='lines', name='bottom'))
+        print('Added traces', flush=True)
+        fig.update_layout(title='Edge Regression Test')
+        fig.write_html('data/tester.html', auto_open=True)
+        print('Done', flush=True)
 
     def process(self, driver=None):
         # location = 'data/images/c141e-il - LOCKHEED C-141 BL761.11 AIRFOILfcafb389-f948-4050-a7cf-a1c23df4056d.png'
