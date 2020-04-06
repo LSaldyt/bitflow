@@ -6,11 +6,11 @@ import shutil
 
 from neo4j import GraphDatabase, basic_auth
 
-from utils.utils import get_module_names, fetch
+from .utils.utils import get_module_names, fetch
 
-from scheduler import Scheduler
-from modules.utils.log import Log
-from create_dependencies import create_dependencies
+from .scheduler import Scheduler
+from .module_utils.log import Log
+from .create_dependencies import create_dependencies
 
 
 class PipelineInterface:
@@ -18,8 +18,9 @@ class PipelineInterface:
     This class defines an interface to a data mining server. It allows modules and settings to the scheduler to be updated dynamically without stopping processing.
     '''
     def __init__(self, filename):
+        create_dependencies()
         self.log = Log('pipeline_server')
-        self.scheduler = Scheduler(settings_file)
+        self.scheduler = Scheduler(filename)
         self.times = dict()
         self.filename = filename
         self.sleep_time = 1
@@ -86,8 +87,9 @@ class PipelineInterface:
             os.mkdir(directory)
             with open(directory + '/.placeholder', 'w') as outfile:
                 outfile.write('')
-        with self.neo_client.session() as session:
-            session.run('match (n) delete n')
+        # with self.neo_client.session() as session:
+        #     session.run('match (n) delete n')
+        #     session.run('match (x)<-[r]->(y) delete r, x, y')
 
 if __name__ == '__main__':
     args = sys.argv[1:]
@@ -99,4 +101,4 @@ if __name__ == '__main__':
     create_dependencies()
     interface = PipelineInterface(settings_file)
     interface.log.log('Loaded settings from ', settings_file)
-    interface.start_server(clean=False)
+    interface.start_server(clean=True)

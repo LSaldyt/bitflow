@@ -2,15 +2,15 @@ from neo4j import GraphDatabase, basic_auth
 import json
 import neobolt
 
-from utils.neo import page, add_json_node
 from collections import defaultdict
 from time import sleep, time
 from queue import Empty
 
-from modules.utils.log import Log
-from modules.utils.profile import Profile
-from modules.utils.transaction import Transaction
-from batch import Batch
+from .utils.neo import page, add_json_node
+from .module_utils.log import Log
+from .module_utils.profile import Profile
+from .module_utils.transaction import Transaction
+from .batch import Batch
 
 class Driver():
     '''

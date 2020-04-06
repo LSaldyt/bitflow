@@ -5,15 +5,12 @@ from collections import Counter
 from time import sleep, time
 from uuid import uuid4
 
-from driver import driver_listener
-from batch import Batch
-
-from utils.utils import fetch
-
 import json
 
-from driver import Driver
-from modules.utils.log import Log
+from .utils.utils import fetch
+from .batch import Batch
+from .driver import Driver, driver_listener
+from .module_utils.log import Log
 
 def save_batch(schedule_queue, transaction_queue, batch):
     batch.save()
