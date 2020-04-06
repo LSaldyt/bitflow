@@ -65,8 +65,7 @@ class OptimizedCatalog(Module):
         self.import_dir = import_dir
 
     def process(self, driver=None):
-        print('Creating cached local long form catalog CSV', flush=True)
-        if not os.path.isfile('data/cache/catalog.csv') or not os.path.isfile('data/cache/relations.csv'):
+        if not os.path.isfile('data/cache/catalog.csv') or not os.path.isfile('data/cache/relations.csv') or not os.path.isfile('data/cache/species.csv'):
             to_csv()
         for filename in os.listdir('.'):
             if filename.endswith('.csv'):
@@ -74,11 +73,15 @@ class OptimizedCatalog(Module):
         driver = self.get_driver(driver=driver)
 
         with driver.neo_client.session() as session:
-             headers = 'id,identifier,datasetID,datasetName,acceptedNameUsageID,parentNameUsageID,taxonomicStatus,taxonRank,verbatimTaxonRank,scientificName,kingdom,phylum,class,order,superfamily,family,genericName,genus,subgenus,specificEpithet,infraspecificEpithet,scientificNameAuthorship,source,namePublishedIn,nameAccordingTo,modified,description,taxonConceptID,scientificNameID,references,name'.split(',')
-             session.run('CREATE INDEX ON :Taxon(name)')
-             session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///catalog.csv" AS line CREATE (x:Taxon {' + ','.join(h + ': line.' + h for h in headers) + '})')
-             session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///species.csv" AS line CREATE (x:Species:Taxon {' + ','.join(h + ': line.' + h for h in headers) + '})')
-             session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///relations.csv" AS line MATCH (x:Taxon {name: line.from}),(y:Taxon {name: line.to}) CREATE (x)-[:supertaxon]->(y)')
+            headers = 'id,identifier,datasetID,datasetName,acceptedNameUsageID,parentNameUsageID,taxonomicStatus,taxonRank,verbatimTaxonRank,scientificName,kingdom,phylum,class,order,superfamily,family,genericName,genus,subgenus,specificEpithet,infraspecificEpithet,scientificNameAuthorship,source,namePublishedIn,nameAccordingTo,modified,description,taxonConceptID,scientificNameID,references,name'.split(',')
+            session.run('CREATE INDEX ON :Taxon(name)')
+            print('Adding catalog.csv')
+            session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///catalog.csv" AS line CREATE (x:Taxon {' + ','.join(h + ': line.' + h for h in headers) + '})')
+            print('Adding species.csv')
+            session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///species.csv" AS line CREATE (x:Species:Taxon {' + ','.join(h + ': line.' + h for h in headers) + '})')
+            print('Adding relations.csv')
+            session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///relations.csv" AS line MATCH (x:Taxon {name: line.from}),(y:Taxon {name: line.to}) CREATE (x)-[:supertaxon]->(y)')
 
-        print('Done!', flush=True)
+        sleep(100)
         yield self.default_transaction(data=dict(done=True))
+        print('Optimized Catalog finished')

@@ -47,7 +47,7 @@ class AirfoilAugmentor(Module):
         return image.transform(image.size, Image.AFFINE, (stretch_x, 0, horizontal, 0, stretch_y, vertical))
 
     def flips(self, image):
-        return [image] + list(map(Image.fromarray, [np.fliplr(image), np.flipud(image), np.fliplr(np.flipud(image))]))
+        return [image] # + list(map(Image.fromarray, [np.fliplr(image), np.flipud(image), np.fliplr(np.flipud(image))]))
 
     def augment(self, filename):
         image = Image.open(filename)
@@ -57,7 +57,7 @@ class AirfoilAugmentor(Module):
                 aug_image = aug_image.rotate(randint(-10, 10))
                 aug_image = self.rand_affine(aug_image)
                 aug_image = self.white_edge_fill(aug_image)
-                aug_image = self.rand_fill(aug_image)
+                # aug_image = self.rand_fill(aug_image)
                 aug_image = self.noise(aug_image, p=0.05)
 
                 aug_file = filename.replace('.png', '_augmented_{}_{}.png'.format(i, j))
