@@ -11,7 +11,7 @@ def fetch(module_name, directory='modules'):
     try:
         module = import_module(module_name)
     except ModuleNotFoundError:
-        for subdir in get_module_subdirs():
+        for subdir in get_module_subdirs(directory=directory):
             try:
                 module = import_module(directory + '.{}.{}'.format(subdir, module_name))
                 break
@@ -22,7 +22,7 @@ def fetch(module_name, directory='modules'):
     return getattr(module, module_name)()
             
 def get_module_names(directory='modules'):
-    for subdir in get_module_subdirs():
+    for subdir in get_module_subdirs(directory=directory):
         modules = os.listdir(directory + '/' + subdir)
         for filename in modules:
             if filename.endswith('.py') and filename != '__init__.py':

@@ -21,7 +21,7 @@ class PipelineInterface:
         self.module_dir = module_dir
         create_dependencies(directory=module_dir)
         self.log = Log('pipeline_server')
-        self.scheduler = Scheduler(filename)
+        self.scheduler = Scheduler(filename, module_dir)
         self.times = dict()
         self.filename = filename
         self.sleep_time = 1
@@ -33,7 +33,7 @@ class PipelineInterface:
         self.neo_client = GraphDatabase.driver(self.settings["neo4j_server"], auth=basic_auth(self.settings["username"], self.settings["password"]), encrypted=self.settings["encrypted"])
 
     def reload_modules(self):
-        for name in get_module_names():
+        for name in get_module_names(directory=self.module_dir):
             if len(self.whitelist) > 0:
                 if name in self.whitelist:
                     self.scheduler.schedule(name)
