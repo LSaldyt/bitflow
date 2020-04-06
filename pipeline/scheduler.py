@@ -91,10 +91,13 @@ class Scheduler:
         self.serialize_queue   = Queue()
         self.schedule_queue    = Queue()
         self.driver_process    = Process(target=driver_listener,  args=(self.transaction_queue, settings_file))
+        self.driver_process.daemon = True
         self.sizes  = self.settings['batch_sizes']
         self.limits = self.settings['process_limits']
         self.indep_batch_process     = Process(target=batch_serializer, args=(self.indep_serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
+        self.indep_batch_process.daemon = True
         self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
+        self.batch_process.daemon = True
         self.dependents        = defaultdict(list)
         self.workers           = []
         self.pagers            = []
@@ -110,10 +113,13 @@ class Scheduler:
         if page:
             self.log.log('Paging database for ', module_name)
             self.pagers.append(Process(target=pager, args=(module_name, in_label, self.serialize_queue, self.driver_creator, self.settings['pager_delay'], self.settings['page_size'])))
+            self.pagers[-1].daemon = True
             self.add_dependents(in_label, module_name)
         elif in_label is None:
             self.log.log('Starting ', module_name)
-            self.workers.append((module_name, Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.driver_creator))))
+            proc = Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.driver_creator))
+            proc.daemon = True
+            self.workers.append((module_name, proc))
         else:
             self.log.log('Added dependent: ', module_name)
             self.add_dependents(in_label, module_name)
@@ -168,7 +174,9 @@ class Scheduler:
                 batch = self.schedule_queue.get(block=False)
                 for sublabel in batch.label.split(':'):
                     for dependent in self.dependents[sublabel]:
-                        dep_proc = (dependent, Process(target=module_runner, args=(dependent, self.serialize_queue, batch, self.driver_creator)))
+                        proc = Process(target=module_runner, args=(dependent, self.serialize_queue, batch, self.driver_creator))
+                        proc.daemon = True
+                        dep_proc = (dependent, proc)
                         if len(self.workers) < self.max_workers and self.check_limit(dependent):
                             self.add_proc(dep_proc)
                         else:

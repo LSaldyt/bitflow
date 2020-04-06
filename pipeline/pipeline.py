@@ -17,8 +17,9 @@ class PipelineInterface:
     '''
     This class defines an interface to a data mining server. It allows modules and settings to the scheduler to be updated dynamically without stopping processing.
     '''
-    def __init__(self, filename):
-        create_dependencies()
+    def __init__(self, filename, module_dir='modules'):
+        self.module_dir = module_dir
+        create_dependencies(directory=module_dir)
         self.log = Log('pipeline_server')
         self.scheduler = Scheduler(filename)
         self.times = dict()
@@ -82,7 +83,8 @@ class PipelineInterface:
             self.scheduler.stop()
 
     def clean(self):
-        for directory in ['logs', 'profiles', 'data/batches', 'data/images']:
+        for directory in ['logs', 'profiles', 'batches', 'images']:
+            directory = 'data/' + directory
             shutil.rmtree(directory)
             os.mkdir(directory)
             with open(directory + '/.placeholder', 'w') as outfile:
@@ -90,15 +92,3 @@ class PipelineInterface:
         # with self.neo_client.session() as session:
         #     session.run('match (n) delete n')
         #     session.run('match (x)<-[r]->(y) delete r, x, y')
-
-if __name__ == '__main__':
-    args = sys.argv[1:]
-    if len(args) == 0:
-        settings_file = 'configurations/default.json'
-    else:
-        settings_file = args[0]
-    print('LOADING PeTaL config ({})'.format(settings_file), flush=True)
-    create_dependencies()
-    interface = PipelineInterface(settings_file)
-    interface.log.log('Loaded settings from ', settings_file)
-    interface.start_server(clean=True)

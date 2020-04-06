@@ -2,7 +2,7 @@
 import os
 from datetime import datetime
 
-LOG_DIR = 'logs/'
+LOG_DIR = 'data/logs/'
 
 def make_directory(basename, directory=None):
     try:
