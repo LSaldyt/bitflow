@@ -13,3 +13,6 @@ data/*
 *.csv
 logs/*
 profiles/*
+PeTaL_pipeline.egg-info/
+build
+dist

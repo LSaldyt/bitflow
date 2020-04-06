@@ -1,5 +1,7 @@
 import setuptools
 
+print(setuptools.find_packages())
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
@@ -12,7 +14,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/LSaldyt/PeTaL-pipeline",
-    packages=['petal'], #setuptools.find_packages(),
+    packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
