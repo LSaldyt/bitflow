@@ -1,4 +1,4 @@
-from ..utils.module import Module
+from petal.pipeline.module_utils.module import Module
 
 import pickle
 

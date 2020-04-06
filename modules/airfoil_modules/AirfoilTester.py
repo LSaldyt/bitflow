@@ -1,5 +1,5 @@
 from .AirfoilEdgeRegressor import AirfoilEdgeRegressor
-from ..utils.module        import Module
+from petal.pipeline.module_utils.module import Module
 
 import pickle
 import plotly.graph_objects as go

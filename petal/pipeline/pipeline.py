@@ -19,6 +19,7 @@ class PipelineInterface:
     '''
     def __init__(self, filename, module_dir='modules'):
         self.module_dir = module_dir
+        print('LOADING PeTaL config ({})'.format(settings_file), flush=True)
         create_dependencies(directory=module_dir)
         self.log = Log('pipeline_server')
         self.scheduler = Scheduler(filename, module_dir)

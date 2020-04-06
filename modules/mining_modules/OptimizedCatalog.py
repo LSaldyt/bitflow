@@ -8,7 +8,7 @@ from neo4j import GraphDatabase, basic_auth
 from time import sleep
 import shutil, os
 
-from ..utils.module import Module
+from petal.pipeline.module_utils.module import Module
 
 from .NormalCatalog import create_dir, to_json
 

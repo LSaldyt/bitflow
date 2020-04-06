@@ -1,4 +1,4 @@
-from ..utils.BatchTorchLearner import BatchTorchLearner
+from petal.pipeline.module_utils.BatchTorchLearner import BatchTorchLearner
 
 import torch
 import torch.nn as nn

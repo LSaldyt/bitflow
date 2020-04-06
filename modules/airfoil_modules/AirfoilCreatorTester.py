@@ -1,5 +1,5 @@
 from .AirfoilCreator import AirfoilCreator
-from ..utils.module  import Module
+from petal.pipeline.module_utils.module import Module
 
 import pickle, torch
 import plotly.graph_objects as go

@@ -1,5 +1,5 @@
-from ..utils.OnlineTorchLearner import OnlineTorchLearner
-from ..utils.silence import silence
+from petal.pipeline.module_utils.OnlineTorchLearner import OnlineTorchLearner
+from petal.pipeline.module_utils.silence import silence
 
 import torch
 import torch.nn as nn

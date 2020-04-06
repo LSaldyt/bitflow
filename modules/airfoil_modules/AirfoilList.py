@@ -1,7 +1,7 @@
 from requests import get
 from bs4 import BeautifulSoup
 
-from ..utils.module import Module
+from petal.pipeline.module_utils.module import Module
 
 TOOLS_URL  = "http://airfoiltools.com"
 SEARCH_URL = "http://airfoiltools.com/search/airfoils"

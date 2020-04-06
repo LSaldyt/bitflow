@@ -1,5 +1,5 @@
 from ..libraries.encyclopedia_of_life.eol_api import EOL_API
-from ..utils.module import Module
+from petal.pipeline.module_utils.module import Module
 
 from pprint import pprint
 

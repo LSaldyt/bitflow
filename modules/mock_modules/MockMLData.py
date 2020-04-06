@@ -1,4 +1,4 @@
-from ..utils.module import Module
+from petal.pipeline.module_utils.module import Module
 
 class MockMLData(Module):
     def __init__(self, in_label=None, out_label='MLData', connect_labels=None, name='MockMLData'):

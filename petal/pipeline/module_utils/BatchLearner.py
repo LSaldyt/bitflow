@@ -1,4 +1,4 @@
-from ..utils.module import Module
+from .module import Module
 from pprint import pprint
 import os, pickle
 

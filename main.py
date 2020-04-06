@@ -8,8 +8,6 @@ if __name__ == '__main__':
         settings_file = 'config/default.json'
     else:
         settings_file = args[0]
-    print('LOADING PeTaL config ({})'.format(settings_file), flush=True)
-    # interface = PipelineInterface(settings_file, module_dir='modules')
-    interface = PipelineInterface(settings_file, module_dir='test_modules')
+    interface = PipelineInterface(settings_file, module_dir='modules')
     interface.log.log('Loaded settings from ', settings_file)
     interface.start_server(clean=True)
