@@ -126,5 +126,5 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
         fig.add_trace(go.Scatter(x=fx, y=fy, mode='lines', name='top'))
         fig.add_trace(go.Scatter(x=fx, y=sy, mode='lines', name='bottom'))
         fig.update_layout(title='Edge Regression Test')
-        fig.write_html(filename, auto_open=True)
+        fig.write_html(filename, auto_open=False)
         self.log.log('Wrote Airfoil plot to file ', filename)
