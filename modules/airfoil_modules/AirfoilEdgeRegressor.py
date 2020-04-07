@@ -11,7 +11,8 @@ import json, os, os.path, pickle
 
 from time import sleep
 from PIL import Image
-import matplotlib.pyplot as plt
+import pickle
+import plotly.graph_objects as go
 
 DPI = 400
 
@@ -28,7 +29,6 @@ def smooth(array, amount):
 class EdgeRegressorModel(nn.Module):
     def __init__(self, depth=1, activation=nn.ReLU, out_size=120, mid_channels=8):
         nn.Module.__init__(self)
-        # self.norm = nn.BatchNorm2d(4)
         self.conv_layers = []
         for i in range(depth):
             if i == 0:
@@ -37,8 +37,6 @@ class EdgeRegressorModel(nn.Module):
                 channels = 8
             self.conv_layers.append(nn.Sequential(
                 nn.Conv2d(channels, mid_channels, 3, padding=1),
-                # nn.Conv2d(mid_channels, mid_channels, 3, padding=1),
-                # nn.BatchNorm2d(mid_channels),
                 activation()
                 ))
             if i < 2:
@@ -49,7 +47,6 @@ class EdgeRegressorModel(nn.Module):
         self.final = nn.Sequential(nn.Linear(1000, out_size))
 
     def forward(self, x):
-        # x = self.norm(x)
         for layer in self.conv_layers:
             x = layer(x)
         x = x.view(-1, 56 * 56 * 8)
@@ -60,7 +57,7 @@ class EdgeRegressorModel(nn.Module):
 
 class AirfoilEdgeRegressor(BatchTorchLearner):
     def __init__(self, filename='data/models/airfoil_edge_regressor.nn', name='AirfoilEdgeRegressor'):
-        BatchTorchLearner.__init__(self, filename=filename, epochs=2, train_fraction=0.8, test_fraction=0.15, validate_fraction=0.05, criterion=nn.MSELoss, optimizer=optim.Adadelta, optimizer_kwargs=dict(lr=1.0, rho=0.9, eps=1e-06, weight_decay=0), in_label='AugmentedAirfoilPlot', name=name)
+        BatchTorchLearner.__init__(self, filename=filename, epochs=2, train_fraction=0.8, test_fraction=0.2, validate_fraction=0.00, criterion=nn.MSELoss, optimizer=optim.Adadelta, optimizer_kwargs=dict(lr=1.0, rho=0.9, eps=1e-06, weight_decay=0), in_label='AugmentedAirfoilPlot', name=name)
         self.log.log('Created AirfoilEdgeRegressor')
 
     def load_image(self, filename):
@@ -99,6 +96,26 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
 
     def test(self, batch):
         self.log.log('Testing on ', batch.uuid)
+        for item in batch.items:
+            filename = item.data['filename']
+            image = self.load_image(filename)
+            coordinates = self.model(image).detach().numpy()[0]
+            self.plot(coordinates, filename=filename.replace('.png', '_regression.html'))
 
     def val(self, batch):
+        raise NotImplementedError('AirfoilEdgeRegressor does not use validation yet')
         self.log.log('Validating on ', batch.uuid)
+
+    def plot(self, coordinates, airfoilname, filename=None):
+        fx = coordinates[:40]
+        fy = coordinates[40:80]
+        sy = coordinates[80:120]
+        fx = smooth(fx, 2)
+        fy = smooth(fy, 2)
+        sy = smooth(sy, 2)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=fx, y=fy, mode='lines', name='top'))
+        fig.add_trace(go.Scatter(x=fx, y=sy, mode='lines', name='bottom'))
+        fig.update_layout(title='Edge Regression Test for ' + airfoilname)
+        fig.write_html(filename, auto_open=False)
+        self.log.log('Wrote Airfoil plot to file ', filename)
