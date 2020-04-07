@@ -86,10 +86,13 @@ class PipelineInterface:
     def clean(self):
         for directory in ['logs', 'profiles', 'batches', 'images']:
             directory = 'data/' + directory
-            shutil.rmtree(directory)
+            try:
+                shutil.rmtree(directory)
+            except FileNotFoundError:
+                pass
             os.mkdir(directory)
             with open(directory + '/.placeholder', 'w') as outfile:
                 outfile.write('')
-        # with self.neo_client.session() as session:
-        #     session.run('match (n) delete n')
-        #     session.run('match (x)<-[r]->(y) delete r, x, y')
+        with self.neo_client.session() as session:
+            session.run('match (n) delete n')
+            session.run('match (x)<-[r]->(y) delete r, x, y')

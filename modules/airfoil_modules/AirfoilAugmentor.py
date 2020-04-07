@@ -58,7 +58,7 @@ class AirfoilAugmentor(Module):
                 aug_image = self.rand_affine(aug_image)
                 aug_image = self.white_edge_fill(aug_image)
                 # aug_image = self.rand_fill(aug_image)
-                aug_image = self.noise(aug_image, p=0.05)
+                # aug_image = self.noise(aug_image, p=0.05)
 
                 aug_file = filename.replace('.png', '_augmented_{}_{}.png'.format(i, j))
                 aug_image.save(aug_file)

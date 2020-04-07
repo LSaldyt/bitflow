@@ -5,7 +5,7 @@ from pstats   import Stats
 
 import pickle
 
-PROFILE_DIR = 'profiles/'
+PROFILE_DIR = 'data/profiles/'
 
 class Profile:
     def __init__(self, name, directory=None):

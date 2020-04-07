@@ -38,7 +38,7 @@ class AirfoilTester(AirfoilEdgeRegressor):
 
     def process(self, driver=None):
         # location = 'data/images/c141e-il - LOCKHEED C-141 BL761.11 AIRFOILfcafb389-f948-4050-a7cf-a1c23df4056d.png'
-        location = 'data/whale_flipper_cross_section.png'
+        location = 'data/images/a63a108c-il - NASA_AMES 63A108 MOD C AIRFOILbd9dc9c5-0548-4ac2-bdb7-d6fce5b285ed_augmented_0_15.png'
         # base = 'data/airfoil_data/wb140-il - WB-140_35_FB 14%_coords.pkl'
         # base = 'data/airfoil_data/2032c-il - 20-32C AIRFOIL_coords.pkl'
         # base = 'data/airfoil_data/c141e-il - LOCKHEED C-141 BL761.11 AIRFOIL_coords.pkl'
