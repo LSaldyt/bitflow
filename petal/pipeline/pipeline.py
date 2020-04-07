@@ -19,7 +19,7 @@ class PipelineInterface:
     '''
     def __init__(self, filename, module_dir='modules'):
         self.module_dir = module_dir
-        print('LOADING PeTaL config ({})'.format(settings_file), flush=True)
+        print('LOADING PeTaL config ({})'.format(filename), flush=True)
         create_dependencies(directory=module_dir)
         self.log = Log('pipeline_server')
         self.scheduler = Scheduler(filename, module_dir)
@@ -85,13 +85,13 @@ class PipelineInterface:
 
     def clean(self):
         for directory in ['logs', 'profiles', 'batches', 'images']:
-            directory = 'data/' + directory
+            fulldir = 'data/' + directory
             try:
-                shutil.rmtree(directory)
+                shutil.rmtree(fulldir)
             except FileNotFoundError:
                 pass
-            os.mkdir(directory)
-            with open(directory + '/.placeholder', 'w') as outfile:
+            os.mkdir(fulldir)
+            with open(fulldir + '/.placeholder', 'w') as outfile:
                 outfile.write('')
         with self.neo_client.session() as session:
             session.run('match (n) delete n')

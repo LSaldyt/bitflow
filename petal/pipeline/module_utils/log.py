@@ -1,4 +1,3 @@
-
 import os
 from datetime import datetime
 
@@ -22,6 +21,7 @@ def get_path(basename, name, directory=None, ending='.log'):
     time = datetime.now()
 
     path = make_directory(basename, directory=directory) + name
+    print(path)
     path += '_' + time.strftime('%a_%d_%b_%y_%I_%M_%p') + ending
 
     base = path
@@ -30,6 +30,7 @@ def get_path(basename, name, directory=None, ending='.log'):
         base = path + '_' + str(i)
         i += 1
     path = base
+    print(path)
     with open(path, 'w') as outfile:
         outfile.write('')
     return path

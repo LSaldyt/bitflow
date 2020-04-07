@@ -1,2 +1,2 @@
-import pipeline
-from pipeline import PipelineInterface
+from . import pipeline
+from .pipeline import PipelineInterface
