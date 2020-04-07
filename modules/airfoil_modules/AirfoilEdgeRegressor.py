@@ -97,25 +97,34 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
     def test(self, batch):
         self.log.log('Testing on ', batch.uuid)
         for item in batch.items:
-            filename = item.data['filename']
-            image = self.load_image(filename)
-            coordinates = self.model(image).detach().numpy()[0]
-            self.plot(coordinates, filename=filename.replace('.png', '_regression.html'))
+            data        = item.data
+            filename    = data['filename']
+            parent      = self.driver.get(data['parent'])
+            with open(parent['coord_file'], 'rb') as infile:
+                coordinates = pickle.load(infile)
+            image       = self.load_image(filename)
+            predicted = self.model(image).detach().numpy()[0]
+            self.plot(coordinates, predicted, filename=filename.replace('.png', '_regression.html'))
 
     def val(self, batch):
         raise NotImplementedError('AirfoilEdgeRegressor does not use validation yet')
         self.log.log('Validating on ', batch.uuid)
 
-    def plot(self, coordinates, airfoilname, filename=None):
-        fx = coordinates[:40]
-        fy = coordinates[40:80]
-        sy = coordinates[80:120]
+    def plot(self, coordinates, predicted, filename=None):
+        fig = go.Figure()
+        fx, fy, sx, sy, camber = coordinates
+        fig.add_trace(go.Scatter(x=fx, y=fy, mode='lines', name='top'))
+        fig.add_trace(go.Scatter(x=fx, y=sy, mode='lines', name='bottom'))
+
+        fx = predicted[:40]
+        fy = predicted[40:80]
+        sy = predicted[80:120]
         fx = smooth(fx, 2)
         fy = smooth(fy, 2)
         sy = smooth(sy, 2)
-        fig = go.Figure()
+
         fig.add_trace(go.Scatter(x=fx, y=fy, mode='lines', name='top'))
         fig.add_trace(go.Scatter(x=fx, y=sy, mode='lines', name='bottom'))
-        fig.update_layout(title='Edge Regression Test for ' + airfoilname)
-        fig.write_html(filename, auto_open=False)
+        fig.update_layout(title='Edge Regression Test')
+        fig.write_html(filename, auto_open=True)
         self.log.log('Wrote Airfoil plot to file ', filename)

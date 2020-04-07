@@ -12,7 +12,10 @@ def make_directory(basename, directory=None):
     if directory is not None:
         directory = basename + directory + '/'
         if not os.path.isdir(directory):
-            os.mkdir(directory)
+            try:
+                os.mkdir(directory)
+            except FileExistsError:
+                pass
         return directory
     else:
         return basename

@@ -7,7 +7,7 @@ from random import randint, random
 from petal.pipeline.module_utils.module import Module
 
 class AirfoilAugmentor(Module):
-    def __init__(self, count=50):
+    def __init__(self, count=100):
         Module.__init__(self, in_label='CleanAirfoilPlot', out_label='AugmentedAirfoilPlot', connect_labels=('augmented_image', 'augmented_image'))
         self.count = count
 
@@ -37,10 +37,10 @@ class AirfoilAugmentor(Module):
         return image
 
     def rand_affine(self, image):
-        horizontal = randint(-30, 30)
-        vertical   = randint(-10, 10)
-        stretch_x  = 0.5 + random() # 0.5 to 1.5
-        stretch_y  = 0.5 + random()
+        horizontal = randint(-15, 15)
+        vertical   = randint(-5, 5)
+        stretch_x  = 0.9 + 0.2 * random() # 0.9 to 1.1
+        stretch_y  = 0.9 + 0.2 * random()
 
         # x, y ->
         # a x + by + c, d x + e y + f
@@ -53,12 +53,12 @@ class AirfoilAugmentor(Module):
         image = Image.open(filename)
         for j in range(self.count):
             for i, flipped in enumerate(self.flips(image)):
-                aug_image = ImageOps.expand(flipped, (120,) * 4)
-                aug_image = aug_image.rotate(randint(-10, 10))
+                aug_image = ImageOps.expand(flipped, (60,) * 4)
+                aug_image = aug_image.rotate(randint(-5, 5))
                 aug_image = self.rand_affine(aug_image)
                 aug_image = self.white_edge_fill(aug_image)
                 # aug_image = self.rand_fill(aug_image)
-                # aug_image = self.noise(aug_image, p=0.05)
+                aug_image = self.noise(aug_image, p=0.01)
 
                 aug_file = filename.replace('.png', '_augmented_{}_{}.png'.format(i, j))
                 aug_image.save(aug_file)
