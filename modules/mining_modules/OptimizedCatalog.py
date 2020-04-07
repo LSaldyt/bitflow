@@ -67,9 +67,10 @@ class OptimizedCatalog(Module):
     def process(self, driver=None):
         if not os.path.isfile('data/cache/catalog.csv') or not os.path.isfile('data/cache/relations.csv') or not os.path.isfile('data/cache/species.csv'):
             to_csv()
-        for filename in os.listdir('.'):
+        for filename in os.listdir('data/cache/'):
             if filename.endswith('.csv'):
-                shutil.copy(filename, self.import_dir + filename)
+                pathname = 'data/cache/' + filename
+                shutil.copy(pathname, self.import_dir + filename)
         driver = self.get_driver(driver=driver)
 
         with driver.neo_client.session() as session:
