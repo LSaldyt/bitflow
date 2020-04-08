@@ -13,7 +13,8 @@ class MockEOLSpeciesModule(Module):
                             'family'      : 'Rorquals', 
                             'genus'       : 'Megaptera', 
                             'subgenus'    : '', 
-                            'species'     : 'Megaptera novaeangliae'}
+                            'species'     : 'Megaptera novaeangliae',
+                            'name'        : 'Megaptera novaeangliae'}
         name = taxon_properties['species']
         yield self.custom_transaction(data=taxon_properties, in_label=None, out_label='Taxon', uuid=name, connect_labels=None)
         data = {'canonical' : name, 'page_id' : 46559443, 'rank' : 'genus'}

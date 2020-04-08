@@ -17,7 +17,6 @@ class WikipediaModule(Module):
         import requests
         # Lookup the species based on its name. Make sure that all Species objects have this attribute!!
         name = previous.data['name']
-        properties = list()
         try:
             results = wikipedia.search(name)
             for result in results: # Create a transaction for each result
@@ -28,15 +27,14 @@ class WikipediaModule(Module):
                     for field in self.SCRAPE_FIELDS: # Store only the desired properties (above) in the node properties
                         try:
                             result_properties[field] = getattr(page, field)
-                        except KeyError:
-                            pass
-                except KeyError:
-                    pass
+                        except KeyError as e:
+                            self.log.log(e)
+                except KeyError as e:
+                    self.log.log(e)
                 except wikipedia.exceptions.WikipediaException as e:
-                    pass
-                properties.append(self.default_transaction(result_properties, from_uuid=previous.uuid)) # Only create default transaction objects
+                    self.log.log(e)
+                yield self.default_transaction(result_properties, from_uuid=previous.uuid) # Only create default transaction objects
             # In the future, use self.custom_transaction() and self.query_transaction() for more complicated Data Mining Modules
-        except requests.exceptions.ConnectionError:
-            pass
-        return properties
+        except requests.exceptions.ConnectionError as e:
+            self.log.log(e)
 

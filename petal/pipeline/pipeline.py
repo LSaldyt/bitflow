@@ -94,5 +94,5 @@ class PipelineInterface:
             with open(fulldir + '/.placeholder', 'w') as outfile:
                 outfile.write('')
         with self.neo_client.session() as session:
-            session.run('match (n) delete n')
             session.run('match (x)<-[r]->(y) delete r, x, y')
+            session.run('match (n) delete n')
