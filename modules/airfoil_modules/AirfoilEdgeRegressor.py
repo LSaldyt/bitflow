@@ -61,7 +61,7 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
         self.log.log('Created AirfoilEdgeRegressor')
 
     def load_image(self, filename):
-        self.log.log('Loading Image')
+        self.log.log('Loading Image ', filename)
         tfms = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
         image = Image.open(filename)
         image.putalpha(255)
@@ -88,11 +88,14 @@ class AirfoilEdgeRegressor(BatchTorchLearner):
 
     # def learn() inherited, uses transform()
     def transform(self, node):
-        self.log.log('Transforming')
-        labels = self.load_labels(node.data['parent'])
-        image  = self.load_image(filename = node.data['filename'])
-        self.log.log('Yielding data')
-        yield image, labels
+        try:
+            self.log.log('Transforming')
+            labels = self.load_labels(node.data['parent'])
+            image  = self.load_image(filename = node.data['filename'])
+            self.log.log('Yielding data')
+            yield image, labels
+        except OSError as e:
+            self.log.log(e)
 
     def test(self, batch):
         self.log.log('Testing on ', batch.uuid)
