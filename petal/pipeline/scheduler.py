@@ -23,16 +23,20 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     batches = dict()
     i = 0
     while True:
-        transaction = serialize_queue.get()
-        label = transaction.out_label
-        if label not in batches:
-            batches[label] = Batch(label)
-        batch = batches[label]
-        batch.add(transaction)
-        max_length = sizes.get(label, sizes['__default__'])
-        if len(batch) >= max_length:
-            save_batch(schedule_queue, transaction_queue, batch)
-            batches.pop(label)
+        try:
+            transaction = serialize_queue.get(block=False)
+            label = transaction.out_label
+            if label not in batches:
+                batches[label] = Batch(label)
+            batch = batches[label]
+            batch.add(transaction)
+            max_length = sizes.get(label, sizes['__default__'])
+            if len(batch) >= max_length:
+                save_batch(schedule_queue, transaction_queue, batch)
+        except Empty:
+            for label, batch in batches.items():
+                if len(batch) > 0:
+                    save_batch(schedule_queue, transaction_queue, batch)
         duration = time() - start
         i += 1
 
@@ -99,7 +103,7 @@ class Scheduler:
         self.indep_batch_process.daemon = True
         self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
         self.batch_process.daemon = True
-        self.dependents        = defaultdict(list)
+        self.dependents        = defaultdict(set)
         self.workers           = []
         self.pagers            = []
         self.waiting           = []
@@ -117,24 +121,26 @@ class Scheduler:
             self.pagers[-1].daemon = True
             self.add_dependents(in_label, module_name)
         elif in_label is None:
-            self.log.log('Starting ', module_name)
             proc = Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.driver_creator, self.module_dir))
             proc.daemon = True
             self.workers.append((module_name, proc))
         else:
-            self.log.log('Added dependent: ', module_name)
             self.add_dependents(in_label, module_name)
 
     def add_dependents(self, in_label, module_name):
-        for label in in_label.split(','):
-            for sublabel in label.split(':'):
-                self.dependents[sublabel].append(module_name)
+        if in_label is not None:
+            for label in in_label.split(','):
+                for sublabel in label.split(':'):
+                    if module_name not in self.dependents[sublabel]:
+                        self.log.log('Added dependent: ', module_name)
+                        self.dependents[sublabel].add(module_name)
 
     def start(self):
         self.driver_process.start()
         self.batch_process.start()
         self.indep_batch_process.start()
         for name, process in self.workers:
+            self.log.log('Starting ', name)
             process.start()
         for pager in self.pagers:
             pager.start()
@@ -203,6 +209,6 @@ class Scheduler:
         running_str = ' '.join('{} ({})'.format(dep, count) for dep, count in sorted(running.items(), key=lambda t : t[0]))
         waiting_str = ' '.join('{} ({})'.format(dep, count) for dep, count in sorted(waiting_counts.items(), key=lambda t : t[0]))
         queue_str   = 'transactions : {}, scheduled : {}, waiting : {}'.format(self.transaction_queue.qsize(), self.schedule_queue.qsize(), len(self.waiting))
-        self.log.log('STATUS {}s'.format(round(duration, 2)))
-        self.log.log('  RUNNING {}'.format(running_str))
-        self.log.log('  WAITING {}'.format(waiting_str))
+        # self.log.log('STATUS {}s'.format(round(duration, 2)))
+        # self.log.log('  RUNNING {}'.format(running_str))
+        # self.log.log('  WAITING {}'.format(waiting_str))

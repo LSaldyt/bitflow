@@ -1,8 +1,8 @@
 from petal.pipeline.module_utils.module import Module
 
 class MockEOLSpeciesModule(Module):
-    def __init__(self, in_label=None, out_label='EOLPage', connect_labels=None, name='EOLSpecies', count=1900000):
-        Module.__init__(self, in_label, out_label, connect_labels, name, count)
+    def __init__(self, in_label=None, out_label='EOLPage', connect_labels=None, name='EOLSpecies'):
+        Module.__init__(self, in_label, out_label, connect_labels, name, page_batches=False)
 
     def process(self, driver=None):
         taxon_properties = {'kingdom'     : 'Animalia', 

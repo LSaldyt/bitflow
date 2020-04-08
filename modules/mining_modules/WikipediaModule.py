@@ -7,7 +7,7 @@ class WikipediaModule(Module):
     In neo4j, these two nodes will be connected by the specified labels as well.
     After this is defined, all that matters is the process() function, which takes a Species node and returns a list of Transaction objects that will add WikipediaArticle nodes to the database.
     '''
-    def __init__(self, in_label='Species', out_label='WikipediaArticle:Article', connect_labels=('MENTIONED_IN_ARTICLE', 'MENTIONS_SPECIES'), name='Wikipedia'):
+    def __init__(self, in_label='Taxon', out_label='WikipediaArticle:Article', connect_labels=('MENTIONED_IN_ARTICLE', 'MENTIONS_SPECIES'), name='Wikipedia'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
         self.SCRAPE_FIELDS = {'content', 'summary', 'coordinates', 'links', 'references', 'images', 'title'}
 
