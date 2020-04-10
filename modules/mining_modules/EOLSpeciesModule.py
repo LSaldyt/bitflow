@@ -4,8 +4,8 @@ from ..libraries.encyclopedia_of_life.eol_api import EOL_API
 import requests
 
 class EOLSpeciesModule(Module):
-    def __init__(self, in_label='CatalogFinishedSignal', out_label='EOLPage', connect_labels=('eol_page', 'eol_page'), name='EOLSpecies', count=1900000):
-        Module.__init__(self, in_label, out_label, connect_labels, name, count)
+    def __init__(self, in_label='CatalogFinishedSignal', out_label='EOLPage', connect_labels=('eol_page', 'eol_page'), name='EOLSpecies'):
+        Module.__init__(self, in_label, out_label, connect_labels, name, False)
 
     def process(self, transaction, driver=None):
         api = EOL_API()
