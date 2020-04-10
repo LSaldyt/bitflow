@@ -21,18 +21,3 @@ class Batch:
 
     def add(self, item):
         self.items.append(item)
-
-    # def save(self):
-    #     with open(self.filename, 'wb') as outfile:
-    #         pickle.dump(self.items, outfile)
-
-    # def load(self):
-    #     with open(self.filename, 'rb') as infile:
-    #         self.items = pickle.load(infile)
-    #     # try:
-    #     # except FileNotFoundError as e:
-    #     #     print('Batch was loaded as empty:')
-    #     #     print(e, flush=True)
-
-    # def clear(self):
-    #     del self.items[:]

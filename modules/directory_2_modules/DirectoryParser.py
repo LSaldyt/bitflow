@@ -55,9 +55,9 @@ class DirectoryParser(Module):
         for science_type, subtype, application in zip(data_science['Type'], data_science['subtype'], data_science['application type']):
             print(science_type, subtype, application, flush=True)
             yield self.custom_transaction(data=dict(name=science_type), in_label=None, out_label='DataScienceType', uuid=science_type + '_DataScienceType')
-            # yield self.custom_transaction(data=dict(name=subtype), in_label='DataScienceType', out_label='DataScienceSubType', uuid=subtype + '_DataScienceSubType', from_uuid=science_type + '_DataScienceType', connect_labels=('subtype', 'subtype'))
-            # yield self.custom_transaction(data=dict(name=application), in_label='DataScienceSubType', out_label='Application', uuid=application + '_Application', from_uuid=subtype + '_DataScienceSubType', connect_labels=('application', 'application'))
-        print('Done', flush=True)
+            yield self.custom_transaction(data=dict(name=subtype), in_label='DataScienceType', out_label='DataScienceSubType', uuid=subtype + '_DataScienceSubType', from_uuid=science_type + '_DataScienceType', connect_labels=('subtype', 'subtype'))
+            yield self.custom_transaction(data=dict(name=application), in_label='DataScienceSubType', out_label='Application', uuid=application + '_Application', from_uuid=subtype + '_DataScienceSubType', connect_labels=('application', 'application'))
+        prin('Done', flush=True)
 
         # with self.driver.neo_client.session() as session:
         #     with open('data/cache/catalog.csv', 'r') as infile:

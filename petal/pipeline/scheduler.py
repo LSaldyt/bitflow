@@ -13,8 +13,6 @@ from .driver import Driver, driver_listener
 from .module_utils.log import Log
 
 def save_batch(schedule_queue, transaction_queue, batch):
-    # batch.save()
-    # batch.clear()
     transaction_queue.put(batch)
     schedule_queue.put(batch)
 
