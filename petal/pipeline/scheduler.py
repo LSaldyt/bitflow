@@ -13,8 +13,8 @@ from .driver import Driver, driver_listener
 from .module_utils.log import Log
 
 def save_batch(schedule_queue, transaction_queue, batch):
-    batch.save()
-    batch.clear()
+    # batch.save()
+    # batch.clear()
     transaction_queue.put(batch)
     schedule_queue.put(batch)
 
@@ -32,11 +32,12 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
             batch.add(transaction)
             max_length = sizes.get(label, sizes['__default__'])
             if len(batch) >= max_length:
-                save_batch(schedule_queue, transaction_queue, batch)
-        except Empty:
+                save_batch(schedule_queue, transaction_queue, batches.pop(label))
+        except:
             for label, batch in batches.items():
                 if len(batch) > 0:
                     save_batch(schedule_queue, transaction_queue, batch)
+            batches = dict()
         duration = time() - start
         i += 1
 

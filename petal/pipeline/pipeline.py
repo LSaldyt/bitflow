@@ -93,6 +93,6 @@ class PipelineInterface:
             os.mkdir(fulldir)
             with open(fulldir + '/.placeholder', 'w') as outfile:
                 outfile.write('')
-        with self.neo_client.session() as session:
-            session.run('match (x)<-[r]->(y) delete r, x, y')
-            session.run('match (n) delete n')
+        # with self.neo_client.session() as session:
+        #     session.run('match (x)<-[r]->(y) delete r, x, y')
+        #     session.run('match (n) delete n')
