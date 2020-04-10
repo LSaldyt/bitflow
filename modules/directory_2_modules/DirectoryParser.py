@@ -38,42 +38,52 @@ class DirectoryParser(Module):
     def long_form(self, filename, headers_index=0):
         reader  = self.read(filename, headers_index=headers_index)
         headers = next(reader)
-        data    = {h : [] for h in headers}
+        data    = {h.replace(' ', '_') : [] for h in headers}
         for row in reader:
-            for label, cell in zip(headers, row):
+            for label, cell in zip(data.keys(), row):
                 data[label].append(cell)
         return data
+
+    def add_hierarchy(self, long_data):
+        previous  = None
+        from_uuid = None
+        for row in zip(*long_data.values()):
+            for key, value in zip(long_data.keys(), row):
+                data = dict(name=value)
+                uuid = value + '_' + key
+                yield self.custom_transaction(data=data, in_label=previous, out_label=key, uuid=uuid, from_uuid=from_uuid, connect_labels=('sub', 'super'))
+                previous  = key
+                from_uuid = uuid
+
+    def link_people(self, people):
+        for row in zip(*people.values()):
+            row_dict = {k : v for k, v in zip(people.keys(), row)}
+            name    = row_dict['Name']
+            project = row_dict['Project_name']
+            yield self.custom_transaction(in_label='Name', out_label='Project', from_uuid=name + '_Name', uuid=project + '_Project')
 
     def process(self, driver=None):
         self.driver = self.get_driver(driver=driver)
 
+        # Read CSV files into long form
         directory    = 'data/directory_data/'
         people       = self.long_form(directory + 'people.csv', headers_index=1)
         projects     = self.long_form(directory + 'projects.csv')
         data_science = self.long_form(directory + 'data_science.csv')
 
-        for science_type, subtype, application in zip(data_science['Type'], data_science['subtype'], data_science['application type']):
-            print(science_type, subtype, application, flush=True)
-            yield self.custom_transaction(data=dict(name=science_type), in_label=None, out_label='DataScienceType', uuid=science_type + '_DataScienceType')
-            yield self.custom_transaction(data=dict(name=subtype), in_label='DataScienceType', out_label='DataScienceSubType', uuid=subtype + '_DataScienceSubType', from_uuid=science_type + '_DataScienceType', connect_labels=('subtype', 'subtype'))
-            yield self.custom_transaction(data=dict(name=application), in_label='DataScienceSubType', out_label='Application', uuid=application + '_Application', from_uuid=subtype + '_DataScienceSubType', connect_labels=('application', 'application'))
-        prin('Done', flush=True)
+        # Rename and remove some columns
+        project_descriptions = projects.pop('Description')
 
-        # with self.driver.neo_client.session() as session:
-        #     with open('data/cache/catalog.csv', 'r') as infile:
-        #         headers = infile.readline().split(',')
-        #     try:
-        #         session.run('CREATE INDEX ON :Taxon(taxonRank)')
-        #     except neobolt.exceptions.ClientError:
-        #         pass
-        #     try:
-        #         session.run('CREATE INDEX ON :Taxon(name)')
-        #     except neobolt.exceptions.ClientError:
-        #         pass
-        #     print('Adding catalog.csv')
-        #     session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///catalog.csv" AS line CREATE (x:Taxon {' + ','.join(h + ': line.' + h for h in headers) + '})')
-        #     print('Adding relations.csv')
-        #     session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///relations.csv" AS line MATCH (x:Taxon {name: line.from}),(y:Taxon {name: line.to}) CREATE (x)-[:supertaxon]->(y)')
+        transaction_pool = []
+        transaction_pool.append(self.add_hierarchy(data_science))
+        transaction_pool.append(self.add_hierarchy(projects))
+        transaction_pool.append(self.add_hierarchy(people))
+        transaction_pool.append(self.link_people(people))
 
-        # yield self.default_transaction(data=dict(done=True), uuid='__optimized_catalog_finished_signal__')
-        # print('Optimized Catalog finished')
+        for transactions in transaction_pool:
+            for transaction in transactions:
+                yield transaction
+
+
+
+
