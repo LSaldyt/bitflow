@@ -7,7 +7,7 @@ class WikipediaImageModule(ImageModule):
     def __init__(self, in_label='WikipediaArticle', out_label='Image', connect_labels=('HAS_IMAGE', 'HAS_IMAGE'), name='WikipediaImages'):
         ImageModule.__init__(self, in_label, out_label, connect_labels, name)
 
-    def process(self, previous, driver=None):
+    def process(self, previous):
         # Lookup the species based on its name. Make sure that all Species objects have this attribute!!
         image_nodes = []
         

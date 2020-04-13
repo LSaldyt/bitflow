@@ -10,7 +10,7 @@ class GoogleScholarModule(Module):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
 
-    def process(self, previous, driver=None):
+    def process(self, previous):
         name = previous.data['name']
         scholar_result_gen = google_scholar_search(name)
         limit = randint(5, 20)

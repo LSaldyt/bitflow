@@ -55,7 +55,7 @@ class EOLModule(Module):
         Module.__init__(self, in_label, out_label, connect_labels, name)
         self.api = EOL_API()
 
-    def process(self, previous, driver=None):
+    def process(self, previous):
         name = previous.data['name']
         uuid = previous.data['uuid']
         query = ' '.join(['MATCH (p:Page)-[:trait|:inferred_trait]->(t:Trait), (t)-[:predicate]->(pred:Term)',

@@ -16,7 +16,6 @@ class BatchLearner(Module):
         self.init_model()
         if os.path.isfile(self.filename):
             self.load()
-        self.driver = None
 
     def init_model(self):
         self.model = None
@@ -44,7 +43,6 @@ class BatchLearner(Module):
     def process_batch(self, batch, driver=None):
         self.load()
         self.log.log(self.name, ' Processing ', batch.uuid)
-        self.driver = self.get_driver(driver=driver)
         if batch.rand < self.train_fraction:
             gen = self.learn(batch)
         elif batch.rand < self.train_fraction + self.test_fraction:

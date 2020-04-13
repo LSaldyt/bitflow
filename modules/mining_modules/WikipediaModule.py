@@ -11,7 +11,7 @@ class WikipediaModule(Module):
         Module.__init__(self, in_label, out_label, connect_labels, name)
         self.SCRAPE_FIELDS = {'content', 'summary', 'coordinates', 'links', 'references', 'images', 'title'}
 
-    def process(self, previous, driver=None):
+    def process(self, previous):
         import wikipedia
         import datetime
         import requests

@@ -48,7 +48,6 @@ class TaxonClassifier(OnlineTorchLearner):
     def __init__(self, filename='data/models/taxon_classifier.nn'):
         OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.001, momentum=0.9), in_label='Image', name='TaxonClassifier', filename=filename)
         self.init_model()
-        self.driver = None
 
         self.label_map    = {taxa : {'' : 0} for taxa in TAXA} # Map empty str to 0
         self.label_counts = {taxa : 1 for taxa in TAXA}
@@ -105,8 +104,7 @@ class TaxonClassifier(OnlineTorchLearner):
             loss = self.step(inputs, labels)
             print('{} loss: '.format(self.name), loss, flush=True)
 
-    def process(self, node, driver=None):
-        self.driver = self.get_driver(driver=driver)
+    def process(self, node):
         if os.path.isfile(self.filename):
             self.load()
         self.learn(node)

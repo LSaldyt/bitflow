@@ -64,16 +64,15 @@ class OptimizedCatalog(Module):
         Module.__init__(self, in_label, out_label, connect_label, name)
         self.import_dir = import_dir
 
-    def process(self, driver=None):
+    def process(self):
         if not os.path.isfile('data/cache/catalog.csv') or not os.path.isfile('data/cache/relations.csv') or not os.path.isfile('data/cache/species.csv'):
             to_csv()
         for filename in os.listdir('data/cache/'):
             if filename.endswith('.csv'):
                 pathname = 'data/cache/' + filename
                 shutil.copy(pathname, self.import_dir + filename)
-        driver = self.get_driver(driver=driver)
 
-        with driver.neo_client.session() as session:
+        with self.driver.neo_client.session() as session:
             headers = 'id,identifier,datasetID,datasetName,acceptedNameUsageID,parentNameUsageID,taxonomicStatus,taxonRank,verbatimTaxonRank,scientificName,kingdom,phylum,class,order,superfamily,family,genericName,genus,subgenus,specificEpithet,infraspecificEpithet,scientificNameAuthorship,source,namePublishedIn,nameAccordingTo,modified,description,taxonConceptID,scientificNameID,references,name'.split(',')
             session.run('CREATE INDEX ON :Taxon(name)')
             print('Adding catalog.csv')

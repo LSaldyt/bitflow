@@ -6,7 +6,7 @@ def get_module_subdirs(directory='modules'):
         if 'modules' in name:
             yield name
 
-def fetch(module_name, directory='modules'):
+def fetch(module_name, directory='modules', driver_constructor=None, settings_file=None):
     try:
         module = import_module(module_name)
     except ModuleNotFoundError:
@@ -19,7 +19,7 @@ def fetch(module_name, directory='modules'):
                 pass
         else:
             raise RuntimeError('Could not find module: ' + name)
-    return getattr(module, module_name)()
+    return getattr(module, module_name)(driver_constructor, settings_file)
             
 def get_module_names(directory='modules'):
     for subdir in get_module_subdirs(directory=directory):

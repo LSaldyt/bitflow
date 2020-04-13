@@ -7,7 +7,7 @@ class EOLSpeciesModule(Module):
     def __init__(self, in_label='CatalogFinishedSignal', out_label='EOLPage', connect_labels=('eol_page', 'eol_page'), name='EOLSpecies', count=1900000):
         Module.__init__(self, in_label, out_label, connect_labels, name, count)
 
-    def process(self, transaction, driver=None):
+    def process(self, transaction):
         api = EOL_API()
         page_size = 1000
         skip  = 0

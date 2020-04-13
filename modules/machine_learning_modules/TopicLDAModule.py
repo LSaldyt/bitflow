@@ -15,5 +15,3 @@ class TopicLDAModule(OnlineLearner):
     
     def learn(self, model, batch):
         pass
-        # print(batch)
-        # self.model.update([batch['abstract']])

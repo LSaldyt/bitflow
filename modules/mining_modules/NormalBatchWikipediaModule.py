@@ -46,7 +46,7 @@ class NormalBatchWikipediaModule(Module):
         page.clear()
         return properties
 
-    def process(self, driver=None):
+    def process(self):
         with open('data/links.txt', 'w', encoding='utf-8') as linkfile:
             linkfile.write('')
         link_queue = []

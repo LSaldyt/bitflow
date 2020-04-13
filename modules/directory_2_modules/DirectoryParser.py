@@ -62,9 +62,7 @@ class DirectoryParser(Module):
             project = row_dict['Project_name']
             yield self.custom_transaction(in_label='Name', out_label='Project', from_uuid=name + '_Name', uuid=project + '_Project')
 
-    def process(self, driver=None):
-        self.driver = self.get_driver(driver=driver)
-
+    def process(self):
         # Read CSV files into long form
         directory    = 'data/directory_data/'
         people       = self.long_form(directory + 'people.csv', headers_index=1)

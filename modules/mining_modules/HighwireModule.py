@@ -10,7 +10,7 @@ class HighwireModule(Module):
     def __init__(self, in_label=None, out_label='HighwireArticle:Article', connect_label=None, name='Highwire'):
         Module.__init__(self, in_label, out_label, connect_label, name)
 
-    def process(self, driver=None):
+    def process(self):
         for file in glob.glob('data/highwire/*.xml'):
             with open(file, "rb") as data:
                 try:
