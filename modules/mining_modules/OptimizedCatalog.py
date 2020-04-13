@@ -8,6 +8,8 @@ from neo4j import GraphDatabase, basic_auth
 from time import sleep
 import shutil, os
 
+import neobolt
+
 from petal.pipeline.module_utils.module import Module
 
 from .NormalCatalog import create_dir, to_json
@@ -67,6 +69,9 @@ class OptimizedCatalog(Module):
         self.import_dir = import_dir
 
     def process(self):
+        self.driver = self.get_driver(driver=driver)
+        if self.driver.get('__optimized_catalog_finished_signal__') is not None:
+            return
         if not os.path.isfile('data/cache/catalog.csv') or not os.path.isfile('data/cache/relations.csv') or not os.path.isfile('data/cache/species.csv'):
             to_csv()
         for filename in os.listdir('data/cache/'):
@@ -75,8 +80,16 @@ class OptimizedCatalog(Module):
                 shutil.copy(pathname, self.import_dir + filename)
 
         with self.driver.neo_client.session() as session:
-            headers = 'id,identifier,datasetID,datasetName,acceptedNameUsageID,parentNameUsageID,taxonomicStatus,taxonRank,verbatimTaxonRank,scientificName,kingdom,phylum,class,order,superfamily,family,genericName,genus,subgenus,specificEpithet,infraspecificEpithet,scientificNameAuthorship,source,namePublishedIn,nameAccordingTo,modified,description,taxonConceptID,scientificNameID,references,name'.split(',')
-            session.run('CREATE INDEX ON :Taxon(name)')
+            with open('data/cache/catalog.csv', 'r') as infile:
+                headers = infile.readline().split(',')
+            try:
+                session.run('CREATE INDEX ON :Taxon(taxonRank)')
+            except neobolt.exceptions.ClientError:
+                pass
+            try:
+                session.run('CREATE INDEX ON :Taxon(name)')
+            except neobolt.exceptions.ClientError:
+                pass
             print('Adding catalog.csv')
             session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///catalog.csv" AS line CREATE (x:Taxon {' + ','.join(h + ': line.' + h for h in headers) + '})')
             print('Adding species.csv')
@@ -84,6 +97,5 @@ class OptimizedCatalog(Module):
             print('Adding relations.csv')
             session.run('USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM "file:///relations.csv" AS line MATCH (x:Taxon {name: line.from}),(y:Taxon {name: line.to}) CREATE (x)-[:supertaxon]->(y)')
 
-        sleep(100)
-        yield self.default_transaction(data=dict(done=True))
+        yield self.default_transaction(data=dict(done=True), uuid='__optimized_catalog_finished_signal__')
         print('Optimized Catalog finished')

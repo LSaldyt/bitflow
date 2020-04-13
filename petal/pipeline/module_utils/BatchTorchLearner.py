@@ -16,8 +16,12 @@ class BatchTorchLearner(BatchLearner):
     '''
     def __init__(self, criterion=None, optimizer=None, optimizer_kwargs=None, **kwargs):
         BatchLearner.__init__(self, **kwargs)
+        self.optimizer_kwargs = optimizer_kwargs
         self.criterion = criterion()
-        self.optimizer = None
+        if self.model is not None:
+            self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
+        else:
+            self.optimizer = None
         self.log.log('Calling base batch torch learner')
 
 
@@ -51,6 +55,8 @@ class BatchTorchLearner(BatchLearner):
             for inputs, labels in self.transform(node):
                 input_list.append(inputs)
                 label_list.append(labels)
+        if self.optimizer is None:
+            self.optimizer = optimizer(self.model.parameters(), **self.optimizer_kwargs)
         self.optimizer.zero_grad()
         inputs = torch.cat(input_list)
         labels = torch.cat(label_list)
