@@ -13,9 +13,6 @@ class BatchLearner(Module):
 
         self.filename = filename
         self.model = None
-        self.init_model()
-        if os.path.isfile(self.filename):
-            self.load()
 
     def init_model(self):
         self.model = None
@@ -41,6 +38,8 @@ class BatchLearner(Module):
         raise RuntimeError('Called process() for Batch Module')
 
     def process_batch(self, batch, driver=None):
+        if self.model is None:
+            self.init_model()
         self.load()
         self.log.log(self.name, ' Processing ', batch.uuid)
         if batch.rand < self.train_fraction:

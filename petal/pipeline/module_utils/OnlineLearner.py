@@ -11,7 +11,6 @@ class OnlineLearner(Module):
         Module.__init__(self, **kwargs)
         self.filename = filename
         self.model = None
-        self.init_model()
         if os.path.isfile(self.filename):
             self.load()
 
@@ -30,6 +29,8 @@ class OnlineLearner(Module):
         pass
 
     def process(self, node, driver=None):
+        if self.model is None:
+            self.init_model()
         if os.path.isfile(self.filename):
             self.load()
         self.learn(node)

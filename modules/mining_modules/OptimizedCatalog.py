@@ -12,6 +12,8 @@ from petal.pipeline.module_utils.module import Module
 
 from .NormalCatalog import create_dir, to_json
 
+IMPORT = '../../.Neo4jDesktop/neo4jDatabases/database-f009728a-c309-4d9d-937d-cbfd4d57ee42/installation-4.0.2/import/'
+
 '''
 This is the backbone mining module for population neo4j with the initial species list
 '''
@@ -60,7 +62,7 @@ class OptimizedCatalog(Module):
     '''
     Populate Taxa into the database in an optimized manor
     '''
-    def __init__(self, import_dir='../../.Neo4jDesktop/neo4jDatabases/database-956b6711-76c3-46c6-80aa-4f335d68b2f8/installation-3.5.14/import/', in_label=None, out_label='CatalogFinishedSignal', connect_label=None, name='OptimizedCatalog'):
+    def __init__(self, import_dir=IMPORT, in_label=None, out_label='CatalogFinishedSignal', connect_label=None, name='OptimizedCatalog'):
         Module.__init__(self, in_label, out_label, connect_label, name)
         self.import_dir = import_dir
 

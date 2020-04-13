@@ -20,7 +20,7 @@ from time import sleep
 
 
 class HierarchicalModel(nn.Module):
-    def __init__(self, i=0, outputs=1, width=1):
+    def __init__(self, i=0, outputs=None):
         nn.Module.__init__(self)
         if i < 0 or i > 7:
             raise ValueError('Parameter i to Efficient Net Model must be between 0 and 7 inclusive, but was: {}'.format(i))
@@ -30,7 +30,7 @@ class HierarchicalModel(nn.Module):
         self.fc1 = nn.Linear(1280 * 7 * 7, 1000)
         self.fc2 = nn.Linear(1000, 500)
 
-        self.outputs = [nn.Linear(500, width) for _ in range(outputs)]
+        self.outputs = [nn.Linear(500, width) for width in outputs]
 
     def forward(self, x):
         x = self.feature_extractor.extract_features(x)
@@ -47,8 +47,6 @@ class TaxonClassifier(OnlineTorchLearner):
     '''
     def __init__(self, filename='data/models/taxon_classifier.nn'):
         OnlineTorchLearner.__init__(self, nn.CrossEntropyLoss, optim.SGD, dict(lr=0.001, momentum=0.9), in_label='Image', name='TaxonClassifier', filename=filename)
-        self.init_model()
-
         self.label_map    = {taxa : {'' : 0} for taxa in TAXA} # Map empty str to 0
         self.label_counts = {taxa : 1 for taxa in TAXA}
 
@@ -61,8 +59,12 @@ class TaxonClassifier(OnlineTorchLearner):
         return img
 
     def init_model(self):
-        self.model = HierarchicalModel(outputs=len(TAXA), width=100)
-        # self.model = HierarchicalModel(outputs=1, width=2)
+        outputs = []
+        for taxa in TAXA:
+            count = self.driver.run_query('MATCH (t:Taxon) WHERE t.taxonRank = \'{}\' WITH COUNT (t) AS c RETURN c'.format(taxa))
+            print(count)
+            1/0
+        self.model = HierarchicalModel(outputs=[])
 
     def load_labels(self, node):
         parent = self.driver.get(node.data['parent'])

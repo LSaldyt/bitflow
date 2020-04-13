@@ -13,6 +13,7 @@ class Module:
         self.driver = None
 
     def add_driver(self, driver):
+        print('Added driver: ', driver, flush=True)
         self.driver = driver
 
     def __enter__(self):
