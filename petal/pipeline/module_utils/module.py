@@ -32,12 +32,12 @@ class Module:
     def custom_transaction(self, *args, **kwargs):
         return Transaction(*args, **kwargs)
 
-    def process(self, node, driver=None):
+    def process(self, node):
         raise NotImplementedError()
 
-    def process_batch(self, batch, driver=None):
+    def process_batch(self, batch):
         for item in batch.items:
-            for transaction in self.process(item, driver=driver):
+            for transaction in self.process(item):
                 yield transaction
 
     def __str__(self):

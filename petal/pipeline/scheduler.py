@@ -45,7 +45,6 @@ def run_module(module, serialize_queue, batch):
         gen = module.process()
     else:
         module.log.log('Batched returning run with ', module.name)
-        batch.load()
         gen = module.process_batch(batch)
     if gen is not None:
         for transaction in gen:

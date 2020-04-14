@@ -61,7 +61,7 @@ class Driver():
                     return False
                 self.lset.add(key)
                 with self.neo_client.session() as session:
-                    session.write_transaction(self.link, id1, id2, transaction.in_label, transaction.out_label, *transaction.connect_labels)
+                    session.write_transaction(self._link, id1, id2, transaction.in_label, transaction.out_label, *transaction.connect_labels)
             return True
 
     def _link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
