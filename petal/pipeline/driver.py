@@ -98,6 +98,7 @@ def driver_listener(transaction_queue, settings_file):
     while True:
         batch = transaction_queue.get()
         for transaction in batch.items:
+            log.log(transaction)
             added = driver.run(transaction)
             if added:
                 i += 1

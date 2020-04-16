@@ -13,6 +13,7 @@ from .driver import Driver, driver_listener
 from .module_utils.log import Log
 
 def save_batch(schedule_queue, transaction_queue, batch):
+    batch.save()
     transaction_queue.put(batch)
     schedule_queue.put(batch)
 
@@ -49,6 +50,7 @@ def run_module(module, serialize_queue, batch):
         gen = module.process_batch(batch)
     if gen is not None:
         for transaction in gen:
+            module.log.log(transaction)
             serialize_queue.put(transaction)
     module.log.log('Finished queueing transactions from ', module.name)
 
@@ -85,6 +87,7 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
                         batch_counts[uuid] += 1
                         log.log('Running page: ', str(uuid))
                         batch = Batch(label, uuid=uuid, rand=rand)
+                        batch.load()
                         run_module(module, serialize_queue, batch)
                     else:
                         pass

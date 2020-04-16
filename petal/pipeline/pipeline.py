@@ -84,7 +84,8 @@ class PipelineInterface:
             self.scheduler.stop()
 
     def clean(self):
-        for directory in ['logs', 'profiles', 'batches', 'images']:
+        clean_dirs = ['logs', 'profiles']
+        for directory in ['logs', 'profiles']:
             fulldir = 'data/' + directory
             try:
                 shutil.rmtree(fulldir)
@@ -93,6 +94,7 @@ class PipelineInterface:
             os.mkdir(fulldir)
             with open(fulldir + '/.placeholder', 'w') as outfile:
                 outfile.write('')
+        # Reset: clean batches and images too
         # DANGEROUS!
         # with self.neo_client.session() as session:
         #     session.run('match (x)<-[r]->(y) delete r, x, y')
