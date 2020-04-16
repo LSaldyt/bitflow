@@ -22,7 +22,7 @@ class ArticleIndexer(Module):
     '''
     This module is intended to index articles within PeTaL
     '''
-    def __init__(self, in_label='Article', out_label='HitList', connect_labels=('hitlist', None), name='Wikipedia'):
+    def __init__(self, in_label='Article', out_label='HitList', connect_labels=('hitlist', None), name='ArticleIndexer'):
         Module.__init__(self, in_label, out_label, connect_labels, name, page_batches=True)
         self.SECTIONS = {'title', 'summary'}
         self.cleaner = Cleaner()
@@ -33,9 +33,10 @@ class ArticleIndexer(Module):
         hitlist = HitList()
 
         data = previous.data
+        print(data['title'], flush=True)
         for section in self.SECTIONS:
             text = data[section]
             for word in cleaner.clean():
                 hitlist.add(section, word)
 
-        return self.default_transaction(data=hitlist.sections)
+        yield self.default_transaction(data=hitlist.sections)

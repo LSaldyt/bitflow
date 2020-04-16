@@ -40,6 +40,7 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         i += 1
 
 def run_module(module, serialize_queue, batch):
+    module.log.log('Initiated ', module.name, ' run_module() in scheduler')
     if batch is None:
         module.log.log('Backbone run ', module.name)
         gen = module.process()
@@ -63,10 +64,13 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
     module.add_driver(driver)
 
     batch_counts = Counter()
-    matcher = 'MATCH (n:Batch) WHERE n.label = \'{}\' '.format(label)
+    matcher = 'MATCH (n:Batch) WHERE n.label CONTAINS \'{}\' '.format(label)
 
     while True:
-        count = next(driver.run_query(matcher + 'WITH COUNT (n) AS count RETURN count').records())['count']
+        query = matcher + 'WITH COUNT (n) AS count RETURN count'
+        count = next(driver.run_query(query).records())['count']
+        log.log('Paging using query: ', query)
+        log.log(name, ' page count: ', count)
         if count > 0:
             for i in range(count // page_size):
                 page_query = matcher + 'RETURN (n) SKIP {} LIMIT {}'.format(i * page_size, page_size)
@@ -75,7 +79,7 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
                     label    = page['n']['label']
                     uuid     = page['n']['uuid']
                     rand     = page['n']['rand']
-                    if batch_counts[uuid] < module.epochs:
+                    if not hasattr(module, 'epochs') or batch_counts[uuid] < module.epochs:
                         batch_counts[uuid] += 1
                         log.log('Running page: ', str(uuid))
                         batch = Batch(label, uuid=uuid, rand=rand)
