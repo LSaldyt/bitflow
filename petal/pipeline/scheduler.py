@@ -79,7 +79,9 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
                     label    = page['n']['label']
                     uuid     = page['n']['uuid']
                     rand     = page['n']['rand']
-                    if not hasattr(module, 'epochs') or batch_counts[uuid] < module.epochs:
+                    has_epochs = hasattr(module, 'epochs')
+                    max_count = module.epochs if has_epochs else 1
+                    if batch_counts[uuid] < max_count:
                         batch_counts[uuid] += 1
                         log.log('Running page: ', str(uuid))
                         batch = Batch(label, uuid=uuid, rand=rand)
