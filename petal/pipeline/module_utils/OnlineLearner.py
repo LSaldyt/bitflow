@@ -28,7 +28,7 @@ class OnlineLearner(Module):
     def learn(self, batch):
         pass
 
-    def process(self, node, driver=None):
+    def process(self, node):
         if self.model is None:
             self.init_model()
         if os.path.isfile(self.filename):

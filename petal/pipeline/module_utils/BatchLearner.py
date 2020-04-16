@@ -34,10 +34,10 @@ class BatchLearner(Module):
     def val(self, batch):
         self.log.log('Validating on ', batch.uuid)
 
-    def process(self, node, driver=None):
+    def process(self, node):
         raise RuntimeError('Called process() for Batch Module')
 
-    def process_batch(self, batch, driver=None):
+    def process_batch(self, batch):
         if self.model is None:
             self.init_model()
         self.load()
