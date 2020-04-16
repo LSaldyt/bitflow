@@ -2,9 +2,10 @@ import pickle
 
 class HitList:
     def __init__(self, uuid):
-        self.filename = 'data/hitlists/{}.hitlist'
+        self.filename = 'data/hitlists/{}.hitlist'.format(uuid)
         self.sections = dict()
         self.words    = set()
+        self.uuid     = uuid
 
     def add(self, section, word):
         self.words.add(word)
@@ -20,8 +21,8 @@ class HitList:
     def word_hitlist(self, word):
         word_list = dict()
         for section, section_counter in self.sections.items():
-            word_list[section] = section_counter[word]
-        return word_list
+            word_list[section] = section_counter.get(word, 0)
+        return tuple(word_list.keys()), tuple(word_list.values())
 
     def save(self):
         with open(self.filename, 'wb') as outfile:

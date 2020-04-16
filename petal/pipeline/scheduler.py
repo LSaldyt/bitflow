@@ -74,8 +74,10 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
         log.log('Paging using query: ', query)
         log.log(name, ' page count: ', count)
         if count > 0:
-            for i in range(count // page_size):
+            log.log('Continuing')
+            for i in range(count // page_size + 1):
                 page_query = matcher + 'RETURN (n) SKIP {} LIMIT {}'.format(i * page_size, page_size)
+                log.log('Page query: ', page_query)
                 pages = driver.run_query(page_query).records()
                 for page in pages:
                     label    = page['n']['label']

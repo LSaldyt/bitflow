@@ -23,4 +23,4 @@ class ArticleIndexer(Module):
                 hitlist.add(section, word)
 
         hitlist.save()
-        yield self.default_transaction(data=dict(filename=hitlist.filename))
+        yield self.default_transaction(data=dict(filename=hitlist.filename, source_uuid=str(previous.uuid)))
