@@ -66,7 +66,7 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
     module.add_driver(driver)
 
     batch_counts = Counter()
-    matcher = 'MATCH (n:Batch) WHERE n.label CONTAINS \'{}\' '.format(label)
+    matcher = 'MATCH (n:Batch) WHERE n.label = \'{}\' '.format(label)
 
     while True:
         query = matcher + 'WITH COUNT (n) AS count RETURN count'

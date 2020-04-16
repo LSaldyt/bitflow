@@ -29,11 +29,11 @@ class WikipediaModule(Module):
                             result_properties[field] = getattr(page, field)
                         except KeyError as e:
                             self.log.log(e)
+                    yield self.default_transaction(result_properties, from_uuid=previous.uuid) # Only create default transaction objects
                 except KeyError as e:
                     self.log.log(e)
                 except wikipedia.exceptions.WikipediaException as e:
                     self.log.log(e)
-                yield self.default_transaction(result_properties, from_uuid=previous.uuid) # Only create default transaction objects
             # In the future, use self.custom_transaction() and self.query_transaction() for more complicated Data Mining Modules
         except requests.exceptions.ConnectionError as e:
             self.log.log(e)

@@ -102,7 +102,8 @@ def driver_listener(transaction_queue, settings_file):
             added = driver.run(transaction)
             if added:
                 i += 1
-        driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
+        for sublabel in batch.label.split(':'):
+            driver.run(Transaction(out_label='Batch', data={'label' : sublabel, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
         duration = time() - start
         total = len(driver.hset) + len(driver.lset)
         log.log('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)))
