@@ -1,5 +1,5 @@
 from petal.pipeline.module_utils.OnlineLearner import OnlineLearner
-from ..libraries.topic_modeling.topic_modeler import TopicModeler
+from ..libraries.natural_language.topic_modeler import TopicModeler
 
 import pickle
 

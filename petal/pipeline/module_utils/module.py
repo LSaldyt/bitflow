@@ -13,7 +13,6 @@ class Module:
         self.driver = None
 
     def add_driver(self, driver):
-        print('Added driver: ', driver, flush=True)
         self.driver = driver
 
     def __enter__(self):
@@ -37,7 +36,10 @@ class Module:
 
     def process_batch(self, batch):
         for item in batch.items:
-            for transaction in self.process(item):
+            results = self.process(item)
+            if results is None:
+                return
+            for transaction in results:
                 yield transaction
 
     def __str__(self):
