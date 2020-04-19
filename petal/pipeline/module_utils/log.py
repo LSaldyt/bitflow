@@ -42,7 +42,7 @@ class Log:
         self.name = name
 
     def log(self, *messages, end='\n'):
-        with open(self.path, 'a') as outfile:
+        with open(self.path, 'a', encoding='utf-8') as outfile:
             for message in messages:
                 outfile.write(str(message))
             outfile.write(end)

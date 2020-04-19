@@ -10,6 +10,10 @@ class Module:
         self.connect_labels = connect_labels
         self.page_batches   = page_batches
         self.log            = Log(name, directory='modules')
+        self.driver = None
+
+    def add_driver(self, driver):
+        self.driver = driver
 
     def __enter__(self):
         self.profile = Profile(self.name, directory='modules')
@@ -27,19 +31,15 @@ class Module:
     def custom_transaction(self, *args, **kwargs):
         return Transaction(*args, **kwargs)
 
-    def get_driver(self, driver=None):
-        if isinstance(driver, tuple):
-            constructor, settings = driver
-            return constructor(settings)
-        else:
-            return driver
-
-    def process(self, node, driver=None):
+    def process(self, node):
         raise NotImplementedError()
 
-    def process_batch(self, batch, driver=None):
+    def process_batch(self, batch):
         for item in batch.items:
-            for transaction in self.process(item, driver=driver):
+            results = self.process(item)
+            if results is None:
+                return
+            for transaction in results:
                 yield transaction
 
     def __str__(self):

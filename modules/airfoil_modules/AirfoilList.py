@@ -25,6 +25,6 @@ class AirfoilList(Module):
     def __init__(self, in_label=None, out_label='AirfoilURL', connect_labels=None, name='AirfoilList'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
-    def process(self, driver=None):
+    def process(self):
         for url, name in scrape_airfoil_list():
             yield self.default_transaction(dict(name=name, url=url))

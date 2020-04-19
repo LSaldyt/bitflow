@@ -6,7 +6,7 @@ def get_module_subdirs(directory='modules'):
         if 'modules' in name:
             yield name
 
-def fetch(module_name, directory='modules'):
+def fetch(module_name, directory='modules', settings_file=None):
     try:
         module = import_module(module_name)
     except ModuleNotFoundError:

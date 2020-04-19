@@ -1,4 +1,4 @@
-import pickle
+import pickle, os
 from uuid import uuid4
 from random import random
 
@@ -21,3 +21,16 @@ class Batch:
 
     def add(self, item):
         self.items.append(item)
+
+    def save(self):
+        print('Saving file to', self.filename)
+        with open(self.filename, 'wb') as outfile:
+            pickle.dump(self.items, outfile)
+
+    def load(self):
+        print('Loading file from ', self.filename)
+        if os.path.isfile(self.filename):
+            with open(self.filename, 'rb') as infile:
+                self.items = pickle.load(infile)
+        else:
+            raise OSError('No batch file ' + self.filename)

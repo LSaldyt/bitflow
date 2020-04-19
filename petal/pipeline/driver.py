@@ -61,13 +61,14 @@ class Driver():
                     return False
                 self.lset.add(key)
                 with self.neo_client.session() as session:
-                    session.write_transaction(self.link, id1, id2, transaction.in_label, transaction.out_label, *transaction.connect_labels)
+                    session.write_transaction(self._link, id1, id2, transaction.in_label, transaction.out_label, *transaction.connect_labels)
             return True
 
-    def link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
+    def _link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
         query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\' MERGE (n)-[:{from_label}]->(m) MERGE (m)-[:{to_label}]->(n)'.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2, from_label=from_label, to_label=to_label))
         tx.run(query)
 
+    @retry
     def add(self, data, label):
         with self.neo_client.session() as session:
             session.write_transaction(add_json_node, label, data)
@@ -79,7 +80,7 @@ class Driver():
         if len(records) > 0:
             return records[0]['n']
         else:
-            raise ValueError('UUID {} invalid'.format(uuid))
+            return None
 
     @retry
     def count(self, label):
@@ -97,10 +98,12 @@ def driver_listener(transaction_queue, settings_file):
     while True:
         batch = transaction_queue.get()
         for transaction in batch.items:
+            log.log(transaction)
             added = driver.run(transaction)
             if added:
                 i += 1
-        driver.run(Transaction(out_label='Batch', data={'label' : batch.label, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
+        for sublabel in batch.label.split(':'):
+            driver.run(Transaction(out_label='Batch', data={'label' : sublabel, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
         duration = time() - start
         total = len(driver.hset) + len(driver.lset)
         log.log('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)))

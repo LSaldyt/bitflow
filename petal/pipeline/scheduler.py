@@ -13,6 +13,7 @@ from .driver import Driver, driver_listener
 from .module_utils.log import Log
 
 def save_batch(schedule_queue, transaction_queue, batch):
+    batch.save()
     transaction_queue.put(batch)
     schedule_queue.put(batch)
 
@@ -39,47 +40,57 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         duration = time() - start
         i += 1
 
-def run_module(module, serialize_queue, batch, driver=None):
+def run_module(module, serialize_queue, batch):
+    module.log.log('Initiated ', module.name, ' run_module() in scheduler')
     if batch is None:
         module.log.log('Backbone run ', module.name)
-        gen = module.process(driver=driver)
+        gen = module.process()
     else:
         module.log.log('Batched returning run with ', module.name)
-        batch.load()
-        gen = module.process_batch(batch, driver=driver)
+        gen = module.process_batch(batch)
     if gen is not None:
         for transaction in gen:
+            module.log.log(transaction)
             serialize_queue.put(transaction)
     module.log.log('Finished queueing transactions from ', module.name)
 
-def module_runner(module_name, serialize_queue, batch, driver=None, module_dir='modules'):
+def module_runner(module_name, serialize_queue, batch, settings_file, module_dir='modules'):
     with fetch(module_name, directory=module_dir) as module:
-        run_module(module, serialize_queue, batch, driver=driver)
+        module.add_driver(Driver(settings_file))
+        run_module(module, serialize_queue, batch)
 
-def pager(name, label, serialize_queue, driver_creator, delay, page_size, module_dir='modules'):
+def pager(name, label, serialize_queue, settings_file, delay, page_size, module_dir='modules'):
     log = Log(name=name, directory='paging')
-    driver_constructor, settings_file = driver_creator
-    driver = driver_constructor(settings_file)
+    driver = Driver(settings_file)
     module = fetch(name, directory=module_dir)
+    module.add_driver(driver)
 
     batch_counts = Counter()
     matcher = 'MATCH (n:Batch) WHERE n.label = \'{}\' '.format(label)
 
     while True:
-        count = next(driver.run_query(matcher + 'WITH COUNT (n) AS count RETURN count').records())['count']
+        query = matcher + 'WITH COUNT (n) AS count RETURN count'
+        count = next(driver.run_query(query).records())['count']
+        log.log('Paging using query: ', query)
+        log.log(name, ' page count: ', count)
         if count > 0:
-            for i in range(count // page_size):
+            log.log('Continuing')
+            for i in range(count // page_size + 1):
                 page_query = matcher + 'RETURN (n) SKIP {} LIMIT {}'.format(i * page_size, page_size)
+                log.log('Page query: ', page_query)
                 pages = driver.run_query(page_query).records()
                 for page in pages:
                     label    = page['n']['label']
                     uuid     = page['n']['uuid']
                     rand     = page['n']['rand']
-                    if batch_counts[uuid] < module.epochs:
+                    has_epochs = hasattr(module, 'epochs')
+                    max_count = module.epochs if has_epochs else 1
+                    if batch_counts[uuid] < max_count:
                         batch_counts[uuid] += 1
                         log.log('Running page: ', str(uuid))
                         batch = Batch(label, uuid=uuid, rand=rand)
-                        run_module(module, serialize_queue, batch, driver=driver)
+                        batch.load()
+                        run_module(module, serialize_queue, batch)
                     else:
                         pass
         sleep(delay)
@@ -89,6 +100,7 @@ class Scheduler:
         self.module_dir = module_dir
         with open(settings_file, 'r') as infile:
             self.settings = json.load(infile)
+        self.settings_file = settings_file
         self.max_workers = self.settings['scheduler:max_workers']
         self.transaction_queue = Queue()
         self.indep_serialize_queue = Queue()
@@ -108,7 +120,6 @@ class Scheduler:
         self.waiting           = []
         with open('.dependencies.json', 'r') as infile:
             self.dependencies = json.load(infile)
-        self.driver_creator = (Driver, settings_file)
         self.log = Log('scheduler')
 
     def schedule(self, module_name):
@@ -116,11 +127,11 @@ class Scheduler:
         in_label, out_label, page = self.dependencies[module_name]
         if page:
             self.log.log('Paging database for ', module_name)
-            self.pagers.append(Process(target=pager, args=(module_name, in_label, self.serialize_queue, self.driver_creator, self.settings['pager_delay'], self.settings['page_size'], self.module_dir)))
+            self.pagers.append(Process(target=pager, args=(module_name, in_label, self.serialize_queue, self.settings_file, self.settings['pager_delay'], self.settings['page_size'], self.module_dir)))
             self.pagers[-1].daemon = True
             self.add_dependents(in_label, module_name)
         elif in_label is None:
-            proc = Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.driver_creator, self.module_dir))
+            proc = Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.settings_file, self.module_dir))
             proc.daemon = True
             self.workers.append((module_name, proc))
         else:
@@ -180,7 +191,7 @@ class Scheduler:
                 batch = self.schedule_queue.get(block=False)
                 for sublabel in batch.label.split(':'):
                     for dependent in self.dependents[sublabel]:
-                        proc = Process(target=module_runner, args=(dependent, self.serialize_queue, batch, self.driver_creator, self.module_dir))
+                        proc = Process(target=module_runner, args=(dependent, self.serialize_queue, batch, self.settings_file, self.module_dir))
                         proc.daemon = True
                         dep_proc = (dependent, proc)
                         if len(self.workers) < self.max_workers and self.check_limit(dependent):

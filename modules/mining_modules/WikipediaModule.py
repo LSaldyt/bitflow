@@ -11,7 +11,7 @@ class WikipediaModule(Module):
         Module.__init__(self, in_label, out_label, connect_labels, name)
         self.SCRAPE_FIELDS = {'content', 'summary', 'coordinates', 'links', 'references', 'images', 'title'}
 
-    def process(self, previous, driver=None):
+    def process(self, previous):
         import wikipedia
         import datetime
         import requests
@@ -29,11 +29,11 @@ class WikipediaModule(Module):
                             result_properties[field] = getattr(page, field)
                         except KeyError as e:
                             self.log.log(e)
+                    yield self.default_transaction(result_properties, from_uuid=previous.uuid) # Only create default transaction objects
                 except KeyError as e:
                     self.log.log(e)
                 except wikipedia.exceptions.WikipediaException as e:
                     self.log.log(e)
-                yield self.default_transaction(result_properties, from_uuid=previous.uuid) # Only create default transaction objects
             # In the future, use self.custom_transaction() and self.query_transaction() for more complicated Data Mining Modules
         except requests.exceptions.ConnectionError as e:
             self.log.log(e)

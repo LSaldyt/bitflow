@@ -4,10 +4,10 @@
  "encrypted": false,
  "batch_sizes" : {"__default__" : 10},
  "process_limits" : {"__default__" : 10},
- "pager_delay" : 5,
+ "scheduler:max_workers" : 1,
  "page_size" : 10,
- "scheduler:max_workers" : 2, 
+ "pager_delay" : 1,
  "pipeline:sleep_time" : 0.1,
  "pipeline:reload_time" : 30,
  "pipeline:blacklist" : [],
- "pipeline:whitelist" : ["OptimizedCatalog"]}
+ "pipeline:whitelist" : ["ArticleIndexer", "InvertedIndexCreator"]}

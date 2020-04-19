@@ -119,7 +119,7 @@ class Airfoils(Module):
     def __init__(self, in_label='AirfoilURL', out_label='Airfoil', connect_labels=None, name='Airfoils'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
-    def process(self, transaction, driver=None):
+    def process(self, transaction):
         url  = transaction.data['url']
         name = transaction.data['name']
         try:

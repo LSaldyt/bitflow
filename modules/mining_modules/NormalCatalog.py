@@ -66,7 +66,7 @@ class NormalCatalog(Module):
     def __init__(self, in_label=None, out_label='Species:Taxon', connect_label=None, name='NormalCatalog', count=2700000):
         Module.__init__(self, in_label, out_label, connect_label, name, count)
 
-    def process(self, driver=None):
+    def process(self):
         '''
         All that this function does is yield Transaction() objects which create Species() nodes in the neo4j database.
         This particular process() function is simply downloading a tab-separated file and parsing it.

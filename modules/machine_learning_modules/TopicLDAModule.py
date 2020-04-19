@@ -1,5 +1,5 @@
 from petal.pipeline.module_utils.OnlineLearner import OnlineLearner
-from ..libraries.topic_modeling.topic_modeler import TopicModeler
+from ..libraries.natural_language.topic_modeler import TopicModeler
 
 import pickle
 
@@ -15,5 +15,3 @@ class TopicLDAModule(OnlineLearner):
     
     def learn(self, model, batch):
         pass
-        # print(batch)
-        # self.model.update([batch['abstract']])

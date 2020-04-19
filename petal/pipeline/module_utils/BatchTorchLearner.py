@@ -16,9 +16,14 @@ class BatchTorchLearner(BatchLearner):
     '''
     def __init__(self, criterion=None, optimizer=None, optimizer_kwargs=None, **kwargs):
         BatchLearner.__init__(self, **kwargs)
+        self.optimizer_kwargs = optimizer_kwargs
         self.criterion = criterion()
-        self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
+        if self.model is not None:
+            self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
+        else:
+            self.optimizer = None
         self.log.log('Calling base batch torch learner')
+
 
     def save(self):
         self.log.log('Saving model')
@@ -41,6 +46,8 @@ class BatchTorchLearner(BatchLearner):
         raise RuntimeError('Batch learner called step()')
 
     def learn(self, batch):
+        if self.optimizer is None:
+            self.optimizer = optimizer(self.model.parameters(), **optimizer_kwargs)
         self.log.log('Learning')
         input_list = []
         label_list = []
@@ -48,6 +55,8 @@ class BatchTorchLearner(BatchLearner):
             for inputs, labels in self.transform(node):
                 input_list.append(inputs)
                 label_list.append(labels)
+        if self.optimizer is None:
+            self.optimizer = optimizer(self.model.parameters(), **self.optimizer_kwargs)
         self.optimizer.zero_grad()
         inputs = torch.cat(input_list)
         labels = torch.cat(label_list)

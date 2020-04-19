@@ -64,6 +64,6 @@ class AirfoilAugmentor(Module):
                 aug_image.save(aug_file)
                 yield aug_file
 
-    def process(self, node, driver=None):
+    def process(self, node):
         for filename in self.augment(node.data['filename']):
             yield self.default_transaction(data=dict(filename=filename, parent=node.data['parent']))

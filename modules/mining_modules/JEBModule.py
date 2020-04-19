@@ -9,7 +9,7 @@ class JEBModule(Module):
         Module.__init__(self, in_label, out_label, connect_labels, name)
         self.JEB_LIMIT = 10
 
-    def process(self, previous, driver=None):
+    def process(self, previous):
         from bs4      import BeautifulSoup 
         from requests import get
         from pprint import pprint
