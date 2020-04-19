@@ -10,6 +10,12 @@ import pickle, os
 LEXICON_PATH = 'data/lexicon'
 INDEX_PATH   = 'data/index'
 
+def insort(items, item, key=lambda x : x):
+    keys  = [key(x) for x in items]
+    k     = key(item)
+    index = bisect_left(keys, k)
+    items.insert(index, item)
+
 class InvertedIndexCreator(Module):
     '''
     Create an inverted index from hitlists
@@ -34,6 +40,10 @@ class InvertedIndexCreator(Module):
             with open(LEXICON_PATH, 'rb') as infile:
                 self.lexicon = pickle.load(infile)
 
+    def rank(self, entry):
+        a, b, uuid = entry
+        return (a, b)
+
     def process(self, previous):
         data = previous.data
         hitlist = HitList(data['source_uuid'])
@@ -42,7 +52,7 @@ class InvertedIndexCreator(Module):
             self.lexicon.add(word)
 
             sections, counts = hitlist.word_hitlist(word)
-            self.index[word].append(counts + (hitlist.uuid,))
+            insort(self.index[word], (counts + (hitlist.uuid,)), key=self.rank)
         print('Creating inverted index..', flush=True)
         pprint(self.index)
 
