@@ -65,7 +65,11 @@ class Driver():
             return True
 
     def _link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
-        query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\' MERGE (n)-[:{from_label}]->(m) MERGE (m)-[:{to_label}]->(n)'.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2, from_label=from_label, to_label=to_label))
+        query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\''.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2))
+        if from_label is not None:
+            query += ('MERGE (n)-[:{from_label}]->(m)'.format(from_label=from_label))
+        if to_label is not None:
+            query += ('MERGE (n)-[:{to_label}]->(m)'.format(to_label=to_label))
         tx.run(query)
 
     @retry
@@ -99,7 +103,11 @@ def driver_listener(transaction_queue, settings_file):
         batch = transaction_queue.get()
         for transaction in batch.items:
             log.log(transaction)
-            added = driver.run(transaction)
+            try:
+                added = driver.run(transaction)
+            except TypeError as e:
+                print(e)
+                print(transaction, flush=True)
             if added:
                 i += 1
         for sublabel in batch.label.split(':'):

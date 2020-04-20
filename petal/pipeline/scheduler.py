@@ -3,7 +3,6 @@ from queue import Empty
 from collections import defaultdict
 from collections import Counter
 from time import sleep, time
-from uuid import uuid4
 
 import json
 
