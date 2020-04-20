@@ -45,6 +45,7 @@ class InvertedIndexCreator(Module):
         return (a, b)
 
     def process(self, previous):
+        print('Beginning index', flush=True)
         data = previous.data
         hitlist = HitList(data['source_uuid'])
         hitlist.load()

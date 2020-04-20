@@ -9,7 +9,7 @@ class WikipediaModule(Module):
     '''
     def __init__(self, in_label='Taxon', out_label='WikipediaArticle:Article', connect_labels=('MENTIONED_IN_ARTICLE', 'MENTIONS_SPECIES'), name='Wikipedia'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
-        self.SCRAPE_FIELDS = {'content', 'summary', 'coordinates', 'links', 'references', 'images', 'title'}
+        self.SCRAPE_FIELDS = {'content', 'summary', 'links', 'references', 'images', 'title'}
 
     def process(self, previous):
         import wikipedia
@@ -29,6 +29,7 @@ class WikipediaModule(Module):
                             result_properties[field] = getattr(page, field)
                         except KeyError as e:
                             self.log.log(e)
+                    self.log.log(result_properties)
                     yield self.default_transaction(result_properties, uuid=page.title + '_WikipediaArticle', from_uuid=previous.uuid) # Only create default transaction objects
                 except KeyError as e:
                     self.log.log(e)
