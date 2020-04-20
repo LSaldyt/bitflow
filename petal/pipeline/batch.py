@@ -10,7 +10,7 @@ class Batch:
             self.uuid = str(uuid4())
         else:
             self.uuid = uuid
-        self.filename = 'data/batches/' + str(self.uuid)
+        self.filename = 'data/batches/' + str(self.uuid.split('_')[0])
         if rand is None:
             self.rand = random()
         else:
