@@ -29,7 +29,7 @@ class WikipediaModule(Module):
                             result_properties[field] = getattr(page, field)
                         except KeyError as e:
                             self.log.log(e)
-                    yield self.default_transaction(result_properties, from_uuid=previous.uuid) # Only create default transaction objects
+                    yield self.default_transaction(result_properties, uuid=page.title + '_WikipediaArticle', from_uuid=previous.uuid) # Only create default transaction objects
                 except KeyError as e:
                     self.log.log(e)
                 except wikipedia.exceptions.WikipediaException as e:

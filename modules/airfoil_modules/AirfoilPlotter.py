@@ -4,8 +4,6 @@ import pickle
 
 import matplotlib.pyplot as plt
 
-from uuid import uuid4
-
 DPI  = 100
 
 class AirfoilPlotter(Module):
@@ -27,7 +25,7 @@ class AirfoilPlotter(Module):
         plt.plot([sx[0], fx[0]], [sy[0], fy[0]], color='black') # Connect front
         plt.plot([sx[-1], fx[-1]], [sy[-1], fy[-1]], color='black') # Connect back
         plt.axis('off')
-        filename = 'data/images/' + node.data['name'] + str(uuid4()) + '.png'
+        filename = 'data/images/' + node.data['name'] + '_' + node.data['Ncrit'] + '_' + node.data['mach'] + node.data['Re'] + '.png'
         plt.savefig(filename)
         yield self.default_transaction(data=dict(filename=filename, parent=str(node.uuid)))
 

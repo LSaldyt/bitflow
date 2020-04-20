@@ -27,4 +27,4 @@ class AirfoilList(Module):
 
     def process(self):
         for url, name in scrape_airfoil_list():
-            yield self.default_transaction(dict(name=name, url=url))
+            yield self.default_transaction(dict(name=name, url=url), uuid=url)
