@@ -33,19 +33,18 @@ class Driver():
         with open(settings_file, 'r') as infile:
             settings = json.load(infile)
         self.neo_client = GraphDatabase.driver(settings["neo4j_server"], auth=basic_auth(settings["username"], settings["password"]), encrypted=settings["encrypted"])
+        self.session = self.neo_client.session()
         self.hset = set()
         self.lset = set()
 
     @retry
     def run_query(self, query):
-        with self.neo_client.session() as session:
-            return session.run(query)
+        return self.session.run(query)
 
     @retry
     def run(self, transaction):
         if transaction.query is not None:
-            with self.neo_client.session() as session:
-                session.run(transaction.query)
+            self.session.run(transaction.query)
         else:
             id1 = transaction.from_uuid
             id2 = transaction.uuid
@@ -60,8 +59,7 @@ class Driver():
                 if key in self.lset:
                     return False
                 self.lset.add(key)
-                with self.neo_client.session() as session:
-                    session.write_transaction(self._link, id1, id2, transaction.in_label, transaction.out_label, *transaction.connect_labels)
+                self.session.write_transaction(self._link, id1, id2, transaction.in_label, transaction.out_label, *transaction.connect_labels)
             return True
 
     def _link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
@@ -74,13 +72,11 @@ class Driver():
 
     @retry
     def add(self, data, label):
-        with self.neo_client.session() as session:
-            session.write_transaction(add_json_node, label, data)
+        self.session.write_transaction(add_json_node, label, data)
 
     @retry
     def get(self, uuid):
-        with self.neo_client.session() as session:
-            records = list(session.run('MATCH (n) WHERE n.uuid = \'{uuid}\' RETURN n'.format(uuid=str(uuid))).records())
+        records = list(self.session.run('MATCH (n) WHERE n.uuid = \'{uuid}\' RETURN n'.format(uuid=str(uuid))).records())
         if len(records) > 0:
             return records[0]['n']
         else:
@@ -88,8 +84,7 @@ class Driver():
 
     @retry
     def count(self, label):
-        with self.neo_client.session() as session:
-            records = session.run('MATCH (x:{label}) WITH COUNT (x) AS count RETURN count'.format(label=label)).records()
+        records = self.session.run('MATCH (x:{label}) WITH COUNT (x) AS count RETURN count'.format(label=label)).records()
         return list(records)[0]['count']
 
 def driver_listener(transaction_queue, settings_file):
@@ -112,8 +107,9 @@ def driver_listener(transaction_queue, settings_file):
                     print(type(v))
             if added:
                 i += 1
-        for sublabel in batch.label.split(':'):
-            driver.run(Transaction(out_label='Batch', data={'label' : sublabel, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid + '_' + sublabel))
+        if batch.save:
+            for sublabel in batch.label.split(':'):
+                driver.run(Transaction(out_label='Batch', data={'label' : sublabel, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid + '_' + sublabel))
         duration = time() - start
         total = len(driver.hset) + len(driver.lset)
         log.log('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)))
