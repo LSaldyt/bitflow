@@ -11,7 +11,7 @@ class Module:
         self.page_batches   = page_batches
         self.log            = Log(name, directory='modules')
         self.driver = None
-        self.save = save
+        self.save_batch = save
 
     def add_driver(self, driver):
         self.driver = driver
@@ -24,7 +24,7 @@ class Module:
         self.profile.close()
 
     def default_transaction(self, data, uuid=None, from_uuid=None):
-        return Transaction(in_label=self.in_label, out_label=self.out_label, connect_labels=self.connect_labels, data=data, uuid=uuid, from_uuid=from_uuid, save=self.save)
+        return Transaction(in_label=self.in_label, out_label=self.out_label, connect_labels=self.connect_labels, data=data, uuid=uuid, from_uuid=from_uuid, save=self.save_batch)
     
     def query_transaction(self, query):
         return Transaction(query=query)
