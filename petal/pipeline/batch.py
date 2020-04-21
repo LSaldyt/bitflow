@@ -27,12 +27,10 @@ class Batch:
             self.do_save = True
 
     def save(self):
-        print('Saving file to', self.filename)
         with open(self.filename, 'wb') as outfile:
             pickle.dump(self.items, outfile)
 
     def load(self):
-        print('Loading file from ', self.filename)
         if os.path.isfile(self.filename):
             with open(self.filename, 'rb') as infile:
                 self.items = pickle.load(infile)

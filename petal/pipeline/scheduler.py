@@ -29,8 +29,8 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         batch = batches[label]
         batch.add(transaction)
         max_length = sizes.get(label, sizes['__default__'])
-        if len(batch) >= max_length or serialize_queue.qsize() == 0:
-            save_batch(schedule_queue, transaction_queue, batches.pop(label))
+        # if len(batch) >= max_length:
+        save_batch(schedule_queue, transaction_queue, batches.pop(label))
         i += 1
 
 def run_module(module, serialize_queue, batch):
@@ -62,6 +62,8 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
     matcher = 'MATCH (n:Batch) WHERE n.label = \'{}\' '.format(label)
 
     while True:
+        print('Paging loop', flush=True)
+        print(batch_counts)
         query = matcher + 'WITH COUNT (n) AS count RETURN count'
         count = next(driver.run_query(query).records())['count']
         log.log('Paging using query: ', query)
@@ -119,10 +121,10 @@ class Scheduler:
         self.log.log('Scheduling ', module_name)
         in_label, out_label, page = self.dependencies[module_name]
         if page:
-            self.log.log('Paging database for ', module_name)
+            self.log.log('Starting pager for', module_name)
             self.pagers.append(Process(target=pager, args=(module_name, in_label, self.serialize_queue, self.settings_file, self.settings['pager_delay'], self.settings['page_size'], self.module_dir)))
             self.pagers[-1].daemon = True
-            self.add_dependents(in_label, module_name)
+            # self.add_dependents(in_label, module_name)
         elif in_label is None:
             proc = Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.settings_file, self.module_dir))
             proc.daemon = True

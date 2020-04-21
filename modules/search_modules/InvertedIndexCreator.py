@@ -45,7 +45,6 @@ class InvertedIndexCreator(Module):
         return (a, b)
 
     def process(self, previous):
-        print('Beginning index', flush=True)
         data = previous.data
         hitlist = HitList(data['source_uuid'])
         hitlist.load()
@@ -54,14 +53,13 @@ class InvertedIndexCreator(Module):
 
             sections, counts = hitlist.word_hitlist(word)
             insort(self.index[word], (counts + (hitlist.uuid,)), key=self.rank)
-        print('Creating inverted index..', flush=True)
-        pprint(self.index)
+        # pprint(self.index)
 
     def process_batch(self, batch):
-        print('INDEXER', flush=True)
+        print('BATCH: ', batch.uuid, flush=True)
         self.load()
         for item in batch.items:
             self.process(item)
-            print(item.uuid)
-        print('Ran indexer', flush=True)
+            print('    UUID: ', item.uuid, flush=True)
         self.save()
+        print('')
