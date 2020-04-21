@@ -24,7 +24,7 @@ class Module:
         self.profile.close()
 
     def default_transaction(self, data, uuid=None, from_uuid=None):
-        return Transaction(in_label=self.in_label, out_label=self.out_label, connect_labels=self.connect_labels, data=data, uuid=uuid, from_uuid=from_uuid, save=save)
+        return Transaction(in_label=self.in_label, out_label=self.out_label, connect_labels=self.connect_labels, data=data, uuid=uuid, from_uuid=from_uuid, save=self.save)
     
     def query_transaction(self, query):
         return Transaction(query=query)

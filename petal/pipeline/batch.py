@@ -4,7 +4,7 @@ from random import random
 
 class Batch:
     def __init__(self, label, uuid=None, rand=None):
-        self.save     = False
+        self.do_save     = False
         self.items    = []
         self.label    = label
         if uuid is None:
@@ -24,7 +24,7 @@ class Batch:
         self.items.append(item)
         # If any contained transactions should be saved, then save them.
         if item.save: 
-            self.save = True
+            self.do_save = True
 
     def save(self):
         print('Saving file to', self.filename)
