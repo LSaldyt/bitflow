@@ -62,5 +62,6 @@ class InvertedIndexCreator(Module):
         self.load()
         for item in batch.items:
             self.process(item)
+            print(item.uuid)
         print('Ran indexer', flush=True)
         self.save()
