@@ -1,7 +1,7 @@
 from uuid import uuid4
 
 class Transaction:
-    def __init__(self, in_label=None, out_label=None, connect_labels=None, data=None, query=None, uuid=None, from_uuid=None):
+    def __init__(self, in_label=None, out_label=None, connect_labels=None, data=None, query=None, uuid=None, from_uuid=None, save=True):
         if uuid is None and data is not None:
             uuid = uuid4()
             # raise ValueError('Need to create UUID for ' + str(in_label) + ', but didn\'t want to auto-generate. Provide a uuid="" parameter')
@@ -14,6 +14,7 @@ class Transaction:
         self.from_uuid      = from_uuid
         if self.data is not None and 'uuid' not in self.data:
             self.data['uuid'] = str(self.uuid)
+        self.save = save
 
     def __repr__(self):
         return str(self)
