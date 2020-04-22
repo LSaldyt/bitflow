@@ -67,8 +67,6 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
     matcher = 'MATCH (n:Batch) WHERE n.label = \'{}\' '.format(label)
 
     while True:
-        print('Paging loop', flush=True)
-        print(batch_counts)
         query = matcher + 'WITH COUNT (n) AS count RETURN count'
         count = next(driver.run_query(query).records())['count']
         log.log('Paging using query: ', query)
