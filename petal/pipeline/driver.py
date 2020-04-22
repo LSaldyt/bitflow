@@ -107,7 +107,7 @@ def driver_listener(transaction_queue, settings_file):
                     print(type(v))
             if added:
                 i += 1
-        if batch.save:
+        if batch.save and batch.label is not None:
             for sublabel in batch.label.split(':'):
                 driver.run(Transaction(out_label='Batch', data={'label' : sublabel, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid + '_' + sublabel))
         duration = time() - start

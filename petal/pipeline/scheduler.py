@@ -19,19 +19,24 @@ def save_batch(schedule_queue, transaction_queue, batch):
 def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     batches   = dict()
     durations = dict()
-    i = 0
     while True:
-        transaction = serialize_queue.get()
-        label = transaction.out_label
-        if label not in batches:
-            batches[label] = Batch(label)
-            durations[label] = time()
-        batch = batches[label]
-        batch.add(transaction)
-        max_length = sizes.get(label, sizes['__default__'])
-        # if len(batch) >= max_length:
-        save_batch(schedule_queue, transaction_queue, batches.pop(label))
-        i += 1
+        try:
+            transaction = serialize_queue.get(block=False)
+            label = transaction.out_label
+            if label not in batches:
+                batches[label] = Batch(label)
+                durations[label] = time()
+            batch = batches[label]
+            batch.add(transaction)
+            max_length = sizes.get(label, sizes['__default__'])
+            if len(batch) >= max_length:
+                save_batch(schedule_queue, transaction_queue, batches.pop(label))
+        except:
+            labels = list(batches.keys())
+            for label in labels:
+                if time() - durations[label] > 3:
+                    save_batch(schedule_queue, transaction_queue, batches.pop(label))
+                    durations[label] = time()
 
 def run_module(module, serialize_queue, batch):
     module.log.log('Initiated ', module.name, ' run_module() in scheduler')
@@ -184,15 +189,16 @@ class Scheduler:
         while not self.schedule_queue.empty():
             if len(self.workers) < self.max_workers:
                 batch = self.schedule_queue.get(block=False)
-                for sublabel in batch.label.split(':'):
-                    for dependent in self.dependents[sublabel]:
-                        proc = Process(target=module_runner, args=(dependent, self.serialize_queue, batch, self.settings_file, self.module_dir))
-                        proc.daemon = True
-                        dep_proc = (dependent, proc)
-                        if len(self.workers) < self.max_workers and self.check_limit(dependent):
-                            self.add_proc(dep_proc)
-                        else:
-                            self.waiting.append(dep_proc)
+                if batch.label is not None:
+                    for sublabel in batch.label.split(':'):
+                        for dependent in self.dependents[sublabel]:
+                            proc = Process(target=module_runner, args=(dependent, self.serialize_queue, batch, self.settings_file, self.module_dir))
+                            proc.daemon = True
+                            dep_proc = (dependent, proc)
+                            if len(self.workers) < self.max_workers and self.check_limit(dependent):
+                                self.add_proc(dep_proc)
+                            else:
+                                self.waiting.append(dep_proc)
             else:
                 break
         return False
