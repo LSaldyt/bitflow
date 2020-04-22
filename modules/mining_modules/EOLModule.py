@@ -51,7 +51,7 @@ def search(query):
     return read_data(page_url)
 
 class EOLModule(Module):
-    def __init__(self, in_label='Species', out_label='EOLData', connect_labels=('MENTIONED_IN_DATA', 'MENTIONS_SPECIES'), name='EOL'):
+    def __init__(self, in_label='Taxon', out_label='EOLData', connect_labels=('MENTIONED_IN_DATA', 'MENTIONS_SPECIES'), name='EOL'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
         self.api = EOL_API()
 
@@ -69,6 +69,7 @@ class EOLModule(Module):
         add_list = []
         for link, datatype, objname, unitname, measurement, target_name in result['data']:
             link = link.replace(' ', '_')
+            link = link.replace('-', '_')
             link = link.replace('\\', '_')
             link = link.replace('/', '_')
             if datatype == 'measurement':
