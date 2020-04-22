@@ -78,10 +78,10 @@ class EOLModule(Module):
                         unitname = ''
                     if measurement is None:
                         measurement = ''
-                    add_list.append(self.custom_transaction('Species', 'EOLMeasurement:EOLData', (link, link), {'name': link, 'units': unitname, 'value': measurement}, from_uuid=uuid))
+                    add_list.append(self.custom_transaction('Taxon', 'EOLMeasurement:EOLData', (link, link), {'name': link, 'units': unitname, 'value': measurement}, from_uuid=uuid))
                 else:
-                    add_list.append(self.custom_transaction('Species', 'EOLObject:EOLData', (link, link), {'value': objname}, from_uuid=uuid))
+                    add_list.append(self.custom_transaction('Taxon', 'EOLObject:EOLData', (link, link), {'value': objname}, from_uuid=uuid))
             elif target_name is not None:
                 if '\'' not in target_name:
-                    add_list.append(self.query_transaction(query='MATCH (n:Species) WHERE n.uuid = \'{}\' MATCH (m:Species) WHERE m.name = \'{}\' MERGE (n)-[:{}]->(m)'.format(uuid, target_name, link)))
+                    add_list.append(self.query_transaction(query='MATCH (n:Taxon) WHERE n.uuid = \'{}\' MATCH (m:Taxon) WHERE m.name = \'{}\' MERGE (n)-[:{}]->(m)'.format(uuid, target_name, link)))
         return add_list

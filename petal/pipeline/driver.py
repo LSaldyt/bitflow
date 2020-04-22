@@ -68,6 +68,7 @@ class Driver():
             query += (' MERGE (n)-[:{from_label}]->(m)'.format(from_label=from_label))
         if to_label is not None:
             query += (' MERGE (n)-[:{to_label}]->(m)'.format(to_label=to_label))
+        print(query, flush=True)
         tx.run(query)
 
     @retry
