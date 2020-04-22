@@ -24,18 +24,19 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
         try:
             transaction = serialize_queue.get(block=False)
             label = transaction.out_label
-            for sublabel in label.split(':'):
-                if sublabel not in counts:
-                    counts[sublabel]  = 0
-                if sublabel not in batches:
-                    batches[sublabel] = Batch(sublabel, uuid=str(sublabel) + '_' + str(counts[sublabel]))
-                    durations[sublabel] = time()
-                batch = batches[sublabel]
-                batch.add(transaction)
-                max_length = sizes.get(sublabel, sizes['__default__'])
-                if len(batch) >= max_length:
-                    save_batch(schedule_queue, transaction_queue, batches.pop(sublabel))
-                    counts[sublabel]  += 1
+            if label is not None:
+                for sublabel in label.split(':'):
+                    if sublabel not in counts:
+                        counts[sublabel]  = 0
+                    if sublabel not in batches:
+                        batches[sublabel] = Batch(sublabel, uuid=str(sublabel) + '_' + str(counts[sublabel]))
+                        durations[sublabel] = time()
+                    batch = batches[sublabel]
+                    batch.add(transaction)
+                    max_length = sizes.get(sublabel, sizes['__default__'])
+                    if len(batch) >= max_length:
+                        save_batch(schedule_queue, transaction_queue, batches.pop(sublabel))
+                        counts[sublabel]  += 1
         except Empty:
             labels = list(batches.keys())
             for label in labels:

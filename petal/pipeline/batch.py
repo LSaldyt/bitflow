@@ -1,6 +1,19 @@
 import pickle, os
 from random import random
 
+def clean(item):
+    if item is None:
+        return None
+    item = str(item)
+    item = item.replace(' ', '_')
+    item = item.replace('-', '_')
+    item = item.replace('\\', '_')
+    item = item.replace('/', '_')
+    item = item.replace('\'', '')
+    item = item.replace('(', '')
+    item = item.replace(')', '')
+    return item
+
 class Batch:
     def __init__(self, label, uuid=None, rand=None):
         self.do_save     = False
@@ -8,7 +21,7 @@ class Batch:
         self.label    = label
         if uuid is None:
             raise ValueError('Batch was supplied with UUID None')
-        self.uuid = uuid
+        self.uuid = clean(uuid)
         self.filename = 'data/batches/' + str(self.uuid)
         if rand is None:
             self.rand = random()

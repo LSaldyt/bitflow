@@ -10,7 +10,7 @@ from .utils.neo import page, add_json_node
 from .module_utils.log import Log
 from .module_utils.profile import Profile
 from .module_utils.transaction import Transaction
-from .batch import Batch
+from .batch import Batch, clean
 
 def retry(f):
     def inner(*args, **kwargs):
@@ -46,8 +46,8 @@ class Driver():
         if transaction.query is not None:
             self.session.run(transaction.query)
         else:
-            id1 = transaction.from_uuid
-            id2 = transaction.uuid
+            id1 = clean(transaction.from_uuid)
+            id2 = clean(transaction.uuid)
             if transaction.data is not None:
                 if id2 in self.hset:
                     return False
@@ -63,6 +63,8 @@ class Driver():
             return True
 
     def _link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
+        from_label = clean(from_label)
+        to_label = clean(to_label)
         query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\''.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2))
         if from_label is not None:
             query += (' MERGE (n)-[:{from_label}]->(m)'.format(from_label=from_label))
@@ -76,6 +78,7 @@ class Driver():
 
     @retry
     def get(self, uuid):
+        uuid = clean(uuid)
         records = list(self.session.run('MATCH (n) WHERE n.uuid = \'{uuid}\' RETURN n'.format(uuid=str(uuid))).records())
         if len(records) > 0:
             return records[0]['n']
