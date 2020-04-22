@@ -1,5 +1,4 @@
 import pickle, os
-from uuid import uuid4
 from random import random
 
 class Batch:
@@ -8,10 +7,9 @@ class Batch:
         self.items    = []
         self.label    = label
         if uuid is None:
-            self.uuid = str(uuid4())
-        else:
-            self.uuid = uuid
-        self.filename = 'data/batches/' + str(self.uuid.split('_')[0])
+            raise ValueError('Batch was supplied with UUID None')
+        self.uuid = uuid
+        self.filename = 'data/batches/' + str(self.uuid)
         if rand is None:
             self.rand = random()
         else:

@@ -18,24 +18,30 @@ def save_batch(schedule_queue, transaction_queue, batch):
 
 def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     batches   = dict()
+    counts    = dict()
     durations = dict()
     while True:
         try:
             transaction = serialize_queue.get(block=False)
             label = transaction.out_label
-            if label not in batches:
-                batches[label] = Batch(label)
-                durations[label] = time()
-            batch = batches[label]
-            batch.add(transaction)
-            max_length = sizes.get(label, sizes['__default__'])
-            if len(batch) >= max_length:
-                save_batch(schedule_queue, transaction_queue, batches.pop(label))
-        except:
+            for sublabel in label.split(':'):
+                if sublabel not in counts:
+                    counts[sublabel]  = 0
+                if sublabel not in batches:
+                    batches[sublabel] = Batch(sublabel, uuid=str(sublabel) + '_' + str(counts[sublabel]))
+                    durations[sublabel] = time()
+                batch = batches[sublabel]
+                batch.add(transaction)
+                max_length = sizes.get(sublabel, sizes['__default__'])
+                if len(batch) >= max_length:
+                    save_batch(schedule_queue, transaction_queue, batches.pop(sublabel))
+                    counts[sublabel]  += 1
+        except Empty:
             labels = list(batches.keys())
             for label in labels:
-                if time() - durations[label] > 3:
+                if time() - durations[label] > 10:
                     save_batch(schedule_queue, transaction_queue, batches.pop(label))
+                    counts[label]  += 1
                     durations[label] = time()
 
 def run_module(module, serialize_queue, batch):
@@ -101,15 +107,12 @@ class Scheduler:
         self.settings_file = settings_file
         self.max_workers = self.settings['scheduler:max_workers']
         self.transaction_queue = Queue()
-        self.indep_serialize_queue = Queue()
         self.serialize_queue   = Queue()
         self.schedule_queue    = Queue()
         self.driver_process    = Process(target=driver_listener,  args=(self.transaction_queue, settings_file))
         self.driver_process.daemon = True
         self.sizes  = self.settings['batch_sizes']
         self.limits = self.settings['process_limits']
-        self.indep_batch_process     = Process(target=batch_serializer, args=(self.indep_serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
-        self.indep_batch_process.daemon = True
         self.batch_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
         self.batch_process.daemon = True
         self.dependents        = defaultdict(set)
@@ -129,7 +132,7 @@ class Scheduler:
             self.pagers[-1].daemon = True
             # self.add_dependents(in_label, module_name)
         elif in_label is None:
-            proc = Process(target=module_runner, args=(module_name, self.indep_serialize_queue, None, self.settings_file, self.module_dir))
+            proc = Process(target=module_runner, args=(module_name, self.serialize_queue, None, self.settings_file, self.module_dir))
             proc.daemon = True
             self.workers.append((module_name, proc))
         else:
@@ -146,7 +149,6 @@ class Scheduler:
     def start(self):
         self.driver_process.start()
         self.batch_process.start()
-        self.indep_batch_process.start()
         for name, process in self.workers:
             self.log.log('Starting ', name)
             process.start()
@@ -156,7 +158,6 @@ class Scheduler:
     def stop(self):
         self.driver_process.terminate()
         self.batch_process.terminate()
-        self.indep_batch_process.terminate()
         for name, process in self.workers:
             process.terminate()
         for pager in self.pagers:

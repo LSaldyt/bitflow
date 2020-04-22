@@ -68,7 +68,6 @@ class Driver():
             query += (' MERGE (n)-[:{from_label}]->(m)'.format(from_label=from_label))
         if to_label is not None:
             query += (' MERGE (n)-[:{to_label}]->(m)'.format(to_label=to_label))
-        print(query, flush=True)
         tx.run(query)
 
     @retry
@@ -110,7 +109,7 @@ def driver_listener(transaction_queue, settings_file):
                 i += 1
         if batch.save and batch.label is not None:
             for sublabel in batch.label.split(':'):
-                driver.run(Transaction(out_label='Batch', data={'label' : sublabel, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid + '_' + sublabel))
+                driver.run(Transaction(out_label='Batch', data={'label' : sublabel, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))
         duration = time() - start
         total = len(driver.hset) + len(driver.lset)
         log.log('Driver rate: {} of {} ({}|{})'.format(round(total / duration, 3), total, len(driver.hset), len(driver.lset)))
