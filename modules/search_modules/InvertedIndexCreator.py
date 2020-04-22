@@ -42,6 +42,7 @@ class InvertedIndexCreator(Module):
 
     def rank(self, entry):
         *hits, uuid = entry
+        print(hits, uuid, sum(hits), flush=True)
         return sum(hits) # TODO replace with custom ranking function with weights
 
     def process(self, previous):
@@ -52,8 +53,7 @@ class InvertedIndexCreator(Module):
             self.lexicon.add(word)
 
             sections, counts = hitlist.word_hitlist(word)
-            insort(self.index[word], (counts + (hitlist.uuid,)), key=self.rank)
-        # pprint(self.index)
+            insort(self.index[word], (counts + (hitlist.uuid,)), key=lambda x : -self.rank(x))
 
     def process_batch(self, batch):
         print('BATCH: ', batch.uuid, flush=True)

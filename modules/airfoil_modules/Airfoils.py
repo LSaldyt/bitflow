@@ -3,7 +3,6 @@ import os
 import time
 import pickle
 import random
-from uuid import uuid4
 from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing

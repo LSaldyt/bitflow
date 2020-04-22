@@ -68,10 +68,6 @@ class EOLModule(Module):
         result = self.api.search(query)
         add_list = []
         for link, datatype, objname, unitname, measurement, target_name in result['data']:
-            link = link.replace(' ', '_')
-            link = link.replace('-', '_')
-            link = link.replace('\\', '_')
-            link = link.replace('/', '_')
             if datatype == 'measurement':
                 if objname is None:
                     if unitname is None:

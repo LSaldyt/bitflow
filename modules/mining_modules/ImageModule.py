@@ -1,7 +1,5 @@
 from petal.pipeline.module_utils.module import Module
 
-from uuid import uuid4
-
 import urllib.request
 import urllib3
 import requests

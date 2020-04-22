@@ -55,8 +55,9 @@ class TopicTranslator():
 
 if __name__ == '__main__':
     translator = TopicTranslator('biology.n.01', 'engineering.n.02')
-    terms = {'branch', 'channel', 'connect', 'couple', 'control', 'convert', 'provision', 'signal', 'support', 'give', 'move'}
+    # terms = {'branch', 'channel', 'connect', 'couple', 'control', 'convert', 'provision', 'signal', 'support', 'give', 'move'}
     # terms = {'signal', 'sense', 'detect'}
+    terms = {'signal'}
     for term in terms:
         print(term)
         results = translator.translate(term, 'biology', 'engineering')
