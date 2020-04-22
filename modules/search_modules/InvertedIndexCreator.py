@@ -41,8 +41,8 @@ class InvertedIndexCreator(Module):
                 self.lexicon = pickle.load(infile)
 
     def rank(self, entry):
-        a, b, uuid = entry
-        return (a, b)
+        *hits, uuid = entry
+        return sum(hits) # TODO replace with custom ranking function with weights
 
     def process(self, previous):
         data = previous.data

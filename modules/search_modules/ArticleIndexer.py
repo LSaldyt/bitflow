@@ -8,7 +8,7 @@ class ArticleIndexer(Module):
     '''
     def __init__(self, in_label='Article', out_label='HitList', connect_labels=('hitlist', 'hitlist'), name='ArticleIndexer'):
         Module.__init__(self, in_label, out_label, connect_labels, name, page_batches=True)
-        self.SECTIONS = {'title', 'summary'}
+        self.SECTIONS = {'title', 'summary', 'content'}
         self.cleaner = Cleaner()
 
     def process(self, previous):
