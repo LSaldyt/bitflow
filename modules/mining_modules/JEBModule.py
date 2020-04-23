@@ -7,7 +7,7 @@ def process_section(section):
 class JEBModule(Module):
     def __init__(self, in_label='Taxon', out_label='JEBArticle:Article', connect_labels=('MENTIONED_IN_ARTICLE', 'MENTIONS_SPECIES'), name='JEB'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
-        self.JEB_LIMIT = 10
+        self.JEB_LIMIT = 50
 
     def process(self, previous):
         from bs4      import BeautifulSoup 

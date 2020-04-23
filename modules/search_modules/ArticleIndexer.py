@@ -22,5 +22,8 @@ class ArticleIndexer(Module):
             for word in self.cleaner.clean(text):
                 hitlist.add(section, word)
 
-        hitlist.save()
-        yield self.default_transaction(data=dict(filename=hitlist.filename, source_uuid=str(previous.uuid)), uuid=str(previous.uuid) + '_hitlist')
+        try:
+            hitlist.save()
+            yield self.default_transaction(data=dict(filename=hitlist.filename, source_uuid=str(previous.uuid)), uuid=str(previous.uuid) + '_hitlist')
+        except OSError as e:
+            print(e)
