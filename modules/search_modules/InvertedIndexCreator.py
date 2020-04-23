@@ -48,12 +48,15 @@ class InvertedIndexCreator(Module):
     def process(self, previous):
         data = previous.data
         hitlist = HitList(data['source_uuid'])
-        hitlist.load()
-        for word in hitlist.words:
-            self.lexicon.add(word)
+        try:
+            hitlist.load()
+            for word in hitlist.words:
+                self.lexicon.add(word)
 
-            sections, counts = hitlist.word_hitlist(word)
-            insort(self.index[word], (counts + (hitlist.uuid,)), key=lambda x : -self.rank(x))
+                sections, counts = hitlist.word_hitlist(word)
+                insort(self.index[word], (counts + (hitlist.uuid,)), key=lambda x : -self.rank(x))
+        except OSError as e:
+            print(e)
 
     def process_batch(self, batch):
         print('BATCH: ', batch.uuid, flush=True)
