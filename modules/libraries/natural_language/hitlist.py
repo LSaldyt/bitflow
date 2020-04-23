@@ -2,7 +2,7 @@ import pickle
 
 class HitList:
     def __init__(self, uuid):
-        uuid = uuid.replace('\'', '').replace(' ', '_').replace('(', '').replace(')', '').replace('\\', '')
+        uuid = uuid.replace('\'', '').replace('(', '').replace(')', '').replace('\\', '')
         self.filename = 'data/hitlists/{}.hitlist'.format(uuid)
         self.sections = dict()
         self.words    = set()
