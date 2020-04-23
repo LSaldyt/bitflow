@@ -6,7 +6,7 @@ from random import random, randint
 from pprint import pprint
 
 class GoogleScholarModule(Module):
-    def __init__(self, in_label='Species', out_label='GoogleArticle:Article', connect_labels=('MENTIONED_IN_ARTICLE', 'MENTIONS_SPECIES'), name='GoogleScholar'):
+    def __init__(self, in_label='Taxon', out_label='GoogleArticle:Article', connect_labels=('MENTIONED_IN_ARTICLE', 'MENTIONS_SPECIES'), name='GoogleScholar'):
         Module.__init__(self, in_label, out_label, connect_labels, name)
 
 
@@ -16,5 +16,7 @@ class GoogleScholarModule(Module):
         limit = randint(5, 20)
         results = []
         for i in range(limit):
-            results.append(self.default_transaction(next(scholar_result_gen).bib, from_uuid=previous.data['uuid']))
+            data = next(scholar_result_gen).bib
+            data['content'] = ''
+            results.append(self.default_transaction(data, uuid=data['title'] + '_GoogleArticle', from_uuid=previous.data['uuid']))
         return results

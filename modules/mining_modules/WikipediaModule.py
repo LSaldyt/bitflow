@@ -31,6 +31,7 @@ class WikipediaModule(Module):
                                 result_properties[field] = getattr(page, field)
                             except KeyError as e:
                                 self.log.log(e)
+                        result_properties['abstract'] = result_properties['summary'] # Re-name
                         self.log.log(result_properties)
                         yield self.default_transaction(result_properties, uuid=page.title + '_WikipediaArticle', from_uuid=previous.uuid) # Only create default transaction objects
                     except KeyError as e:
