@@ -63,3 +63,48 @@ class MockEOLSpeciesModule(Module):
         yield self.custom_transaction(data=taxon_properties, in_label=None, out_label='Taxon', uuid=name, connect_labels=None)
         data = {'canonical' : name, 'page_id' : 46559751, 'rank' : 'species'}
         yield self.custom_transaction(data=data, in_label='Taxon', out_label='EOLPage', uuid=str(data['page_id']), from_uuid=name, connect_labels=('eol_page', 'eol_page'))
+
+        taxon_properties = {'kingdom'     : 'Animalia', 
+                            'phylum'      : 'Chordata', 
+                            'class'       : 'Aves', 
+                            'order'       : 'Accipitriformes', 
+                            'superfamily' : '', 
+                            'family'      : 'Accipitridae', 
+                            'genus'       : 'Haliaeetus', 
+                            'subgenus'    : '', 
+                            'species'     : 'Haliaeetus leucocephalus',
+                            'name'        : 'Haliaeetus leucocephalus'}
+        name = taxon_properties['species']
+        yield self.custom_transaction(data=taxon_properties, in_label=None, out_label='Taxon', uuid=name, connect_labels=None)
+        data = {'canonical' : name, 'page_id' : 45511401, 'rank' : 'species'}
+        yield self.custom_transaction(data=data, in_label='Taxon', out_label='EOLPage', uuid=str(data['page_id']), from_uuid=name, connect_labels=('eol_page', 'eol_page'))
+
+        taxon_properties = {'kingdom'     : 'Animalia', 
+                            'phylum'      : 'Chordata', 
+                            'class'       : 'Aves', 
+                            'order'       : 'Accipitriformes', 
+                            'superfamily' : '', 
+                            'family'      : 'Accipitridae', 
+                            'genus'       : 'Haliaeetus', 
+                            'subgenus'    : '', 
+                            'species'     : 'Haliaeetus leucocephalus',
+                            'name'        : 'Haliaeetus leucocephalus'}
+        name = taxon_properties['species']
+        yield self.custom_transaction(data=taxon_properties, in_label=None, out_label='Taxon', uuid=name, connect_labels=None)
+        data = {'canonical' : name, 'page_id' : 45511401, 'rank' : 'species'}
+        yield self.custom_transaction(data=data, in_label='Taxon', out_label='EOLPage', uuid=str(data['page_id']), from_uuid=name, connect_labels=('eol_page', 'eol_page'))
+
+        taxon_properties = {'kingdom'     : 'Animalia', 
+                            'phylum'      : 'Chordata', 
+                            'class'       : 'Actinopterygii', 
+                            'order'       : 'Scombriformes', 
+                            'superfamily' : '', 
+                            'family'      : 'Sphyraenidae', 
+                            'genus'       : 'Sphyraena', 
+                            'subgenus'    : '', 
+                            'species'     : '',
+                            'name'        : 'Sphyraena'}
+        name = taxon_properties['genus']
+        yield self.custom_transaction(data=taxon_properties, in_label=None, out_label='Taxon', uuid=name, connect_labels=None)
+        data = {'canonical' : name, 'page_id' : 46577212, 'rank' : 'genus'}
+        yield self.custom_transaction(data=data, in_label='Taxon', out_label='EOLPage', uuid=str(data['page_id']), from_uuid=name, connect_labels=('eol_page', 'eol_page'))
