@@ -5,7 +5,7 @@ def clean(item):
     if item is None:
         return None
     item = str(item)
-    item = item.replace(' ', '_')
+    # item = item.replace(' ', '_')
     item = item.replace('-', '_')
     item = item.replace('\\', '_')
     item = item.replace('/', '_')

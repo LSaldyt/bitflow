@@ -63,8 +63,8 @@ class Driver():
             return True
 
     def _link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
-        from_label = clean(from_label)
-        to_label = clean(to_label)
+        from_label = clean(from_label).replace(' ', '_')
+        to_label   = clean(to_label).replace(' ', '_')
         query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\''.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2))
         if from_label is not None:
             query += (' MERGE (n)-[:{from_label}]->(m)'.format(from_label=from_label))

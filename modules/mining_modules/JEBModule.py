@@ -32,14 +32,14 @@ class JEBModule(Module):
                     properties['title']    = article_page.find(attrs={'class' : 'highwire-cite-title'}).get_text()
                     properties['authors']  = article_page.find(attrs={'class' : 'highwire-cite-authors'}).get_text()
                     article_page = article_page.find(attrs={'class' : 'fulltext-view'})
-                        sections = [process_section(section) for section in article_page.find_all(attrs={'class' : 'section'})]
-                        properties['abstract'] = sections[0]
-                        properties['intro']    = sections[1]
-                        properties['methods']  = sections[2]
-                        properties['results']  = sections[3]
-                        properties['content']  = '\n'.join(sections[1:])
-                        articles.append(self.default_transaction(properties, uuid=properties['title'] + '_JEBArticle', from_uuid=previous.uuid))
-                        i += 1
+                    sections = [process_section(section) for section in article_page.find_all(attrs={'class' : 'section'})]
+                    properties['abstract'] = sections[0]
+                    properties['intro']    = sections[1]
+                    properties['methods']  = sections[2]
+                    properties['results']  = sections[3]
+                    properties['content']  = '\n'.join(sections[1:])
+                    articles.append(self.default_transaction(properties, uuid=properties['title'] + '_JEBArticle', from_uuid=previous.uuid))
+                    i += 1
             except AttributeError:
                 pass
         return articles
