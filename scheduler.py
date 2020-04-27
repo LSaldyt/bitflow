@@ -9,7 +9,7 @@ import json
 from .utils.utils import fetch
 from .batch import Batch
 from .driver import Driver, driver_listener
-from .module_utils.log import Log
+from .utils.log import Log
 
 def save_batch(schedule_queue, transaction_queue, batch):
     batch.save()

@@ -7,9 +7,9 @@ from time import sleep, time
 from queue import Empty
 
 from .utils.neo import page, add_json_node
-from .module_utils.log import Log
-from .module_utils.profile import Profile
-from .module_utils.transaction import Transaction
+from .utils.log import Log
+from .utils.profile import Profile
+from .utils.transaction import Transaction
 from .batch import Batch, clean
 
 def retry(f):

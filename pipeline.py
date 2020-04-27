@@ -9,7 +9,7 @@ from neo4j import GraphDatabase, basic_auth
 from .utils.utils import get_module_names, fetch
 
 from .scheduler import Scheduler
-from .module_utils.log import Log
+from .utils.log import Log
 from .create_dependencies import create_dependencies
 
 
