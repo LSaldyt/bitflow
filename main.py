@@ -1,6 +1,10 @@
 #!/usr/bin/env python
-from petal import PipelineInterface
+from pipeline import PipelineInterface
 import sys
+
+'''
+Create an interface to the PeTaL data pipeline and tell it where to import modules from
+'''
 
 if __name__ == '__main__':
     args = sys.argv[1:]
