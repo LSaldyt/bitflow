@@ -4,20 +4,25 @@ import os
 import sys
 import shutil
 
-from neo4j import GraphDatabase, basic_auth
-
 from .utils.utils import get_module_names, fetch
 
 from .scheduler import Scheduler
 from .utils.log import Log
-from .create_dependencies import create_dependencies
+from .utils.create_dependencies import create_dependencies
 
 
 class PipelineInterface:
     '''
-    This class defines an interface to a data mining server. It allows modules and settings to the scheduler to be updated dynamically without stopping processing.
+    This class defines an interface to a data mining server. 
+    It allows modules and settings to the scheduler to be updated dynamically without stopping processing.
+    For instance, one can run a species cataloger, and an image downloader that depends on it. 
+    Then if the image downloader were to break mid-processing, it could be patched and would be re-loaded live, allowing the cataloger to continue running.
     '''
     def __init__(self, filename, module_dir='modules'):
+        '''
+        :param filename: A pipeline config file, JSON. See /config/ directory for examples
+        :param module_dir: A directory with the relevant modules to be run
+        '''
         self.module_dir = module_dir
         print('LOADING PeTaL config ({})'.format(filename), flush=True)
         create_dependencies(directory=module_dir)
@@ -31,9 +36,11 @@ class PipelineInterface:
         self.whitelist = []
         self.blacklist = []
         self.settings = self.load_settings()
-        self.neo_client = GraphDatabase.driver(self.settings["neo4j_server"], auth=basic_auth(self.settings["username"], self.settings["password"]), encrypted=self.settings["encrypted"])
 
     def reload_modules(self):
+        '''
+        Actively reload all modules
+        '''
         for name in get_module_names(directory=self.module_dir):
             if len(self.whitelist) > 0:
                 if name in self.whitelist:
@@ -42,6 +49,10 @@ class PipelineInterface:
                 self.scheduler.schedule(name)
 
     def load_settings(self):
+        '''
+        Copy the settings file into the pipelines settings.
+        For instance, can change the reload time from 30 to 10s if desired
+        '''
         with open(self.filename, 'r') as infile:
             settings = json.load(infile)
         self.log.log(settings)
@@ -55,8 +66,12 @@ class PipelineInterface:
         return settings
 
     def start_server(self, clean=True):
-        print('CLEANING Old Data', flush=True)
+        '''
+        Start the pipeline server..
+        :param clean: Remove data from a previous run of the server, i.e. batches and so on
+        '''
         if clean:
+            print('CLEANING Old Data', flush=True)
             self.clean()
         print('STARTING PeTaL Data Pipeline Server', flush=True)
         self.log.log('Starting pipeline server')
@@ -84,7 +99,7 @@ class PipelineInterface:
             self.scheduler.stop()
 
     def clean(self):
-        clean_dirs = ['logs', 'profiles']
+        clean_dirs = ['logs', 'profiles', 'batches', 'images']
         for directory in ['logs', 'profiles']:
             fulldir = 'data/' + directory
             try:
@@ -94,8 +109,3 @@ class PipelineInterface:
             os.mkdir(fulldir)
             with open(fulldir + '/.placeholder', 'w') as outfile:
                 outfile.write('')
-        # Reset: clean batches and images too
-        # DANGEROUS!
-        # with self.neo_client.session() as session:
-        #     session.run('match (x)<-[r]->(y) delete r, x, y')
-        #     session.run('match (n) delete n')

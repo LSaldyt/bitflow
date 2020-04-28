@@ -10,15 +10,25 @@ from .utils.neo import page, add_json_node
 from .utils.log import Log
 from .utils.profile import Profile
 from .utils.transaction import Transaction
-from .batch import Batch, clean
+from .batch import Batch
+from .utils.utils import clean_uuid as clean
+
+'''
+This file defines a wrapper around the neo4j database. This code is pretty messy, as it has evolved a lot over time.
+'''
 
 def retry(f):
+    '''
+    Decorator. Quality of life: keeps certain functions going even if the database server goes down for some reason
+    Usage:
+    @retry
+    def my_function(arg):
+        # do something important with the database connection
+    '''
     def inner(*args, **kwargs):
-        waiting = True
-        while waiting:
+        while True:
             try:
                 return f(*args, **kwargs)
-                waiting = False
             except neobolt.exceptions.ServiceUnavailable as e:
                 print('Cannot reach neo4j server. Is it running? Sleeping 1s..', flush=True)
                 sleep(1)
@@ -27,9 +37,13 @@ def retry(f):
 class Driver():
     '''
     An API providing a lightweight connection to neo4j
+    Note: I wrote "lightweight" when that was true. Not clear if still true. Hopefully stays close to true.
     '''
     @retry
     def __init__(self, settings_file):
+        '''
+        :param settings_file: Path to a json file containing neo4j server settings
+        '''
         with open(settings_file, 'r') as infile:
             settings = json.load(infile)
         self.neo_client = GraphDatabase.driver(settings["neo4j_server"], auth=basic_auth(settings["username"], settings["password"]), encrypted=settings["encrypted"])
@@ -39,20 +53,28 @@ class Driver():
 
     @retry
     def run_query(self, query):
+        '''
+        :param query: A string containing a neo4j query
+        '''
         return self.session.run(query)
 
     @retry
     def run(self, transaction):
+        '''
+        :param transaction: A :class:`utils.transaction.Transaction` representing an operation on the database
+        '''
         if transaction.query is not None:
             self.session.run(transaction.query)
         else:
             id1 = clean(transaction.from_uuid)
             id2 = clean(transaction.uuid)
+            # Add a new node to neo4j
             if transaction.data is not None:
                 if id2 in self.hset:
                     return False
                 self.hset.add(id2)
-                self.add(transaction.data, transaction.out_label)
+                self.session.write_transaction(add_json_node, label, data)
+            # Add a new connection to neo4j
             if id1 is not None and transaction.connect_labels is not None:
                 id1 = str(id1)
                 key = str(id1) + str(id2)
@@ -63,6 +85,9 @@ class Driver():
             return True
 
     def _link(self, tx, id1, id2, in_label, out_label, from_label, to_label):
+        '''
+        Link two nodes in neo4j, with the given ids and labels
+        '''
         from_label = clean(from_label).replace(' ', '_')
         to_label   = clean(to_label).replace(' ', '_')
         query = ('MATCH (n:{in_label}) WHERE n.uuid=\'{id1}\' MATCH (m:{out_label}) WHERE m.uuid=\'{id2}\''.format(in_label=in_label, out_label=out_label, id1=id1, id2=id2))
@@ -73,11 +98,11 @@ class Driver():
         tx.run(query)
 
     @retry
-    def add(self, data, label):
-        self.session.write_transaction(add_json_node, label, data)
-
-    @retry
     def get(self, uuid):
+        '''
+        Return the node pointed to by uuid. Returns None if not present
+        :param uuid: The uuid of a neo4j node
+        '''
         uuid = clean(uuid)
         records = list(self.session.run('MATCH (n) WHERE n.uuid = \'{uuid}\' RETURN n'.format(uuid=str(uuid))).records())
         if len(records) > 0:
@@ -87,29 +112,34 @@ class Driver():
 
     @retry
     def count(self, label):
+        '''
+        Count the number of nodes with a particular label in the database
+        :param label: The label to count nodes of
+        '''
         records = self.session.run('MATCH (x:{label}) WITH COUNT (x) AS count RETURN count'.format(label=label)).records()
         return list(records)[0]['count']
 
 def driver_listener(transaction_queue, settings_file):
+    '''
+    The continually running driver process which allows other data-generating processes to run while transactions are put in line
+    :param transaction_queue: A :class:`multiprocessing.Queue` object full of :class:`Batch` objects.
+    :param settings_file: A json file with Driver-specific settings, like address and password... maybe someone should change this?
+    '''
     profile = Profile('driver')
     log     = Log('driver')
 
     start = time()
     driver = Driver(settings_file)
-    i = 0
     while True:
+        # Wait for batches and then add them to the database
         batch = transaction_queue.get()
         for transaction in batch.items:
             log.log(transaction)
             try:
-                added = driver.run(transaction)
+                driver.run(transaction)
             except TypeError as e:
-                print(e)
-                for k, v in transaction.data.items():
-                    print(k)
-                    print(type(v))
-            if added:
-                i += 1
+                log.log(e)
+        # Save batches to database for re-use
         if batch.save and batch.label is not None:
             for sublabel in batch.label.split(':'):
                 driver.run(Transaction(out_label='Batch', data={'label' : sublabel, 'filename' : batch.filename, 'rand' : batch.rand}, uuid=batch.uuid))

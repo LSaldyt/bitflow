@@ -28,3 +28,16 @@ def get_module_names(directory='modules'):
             if filename.endswith('.py') and filename != '__init__.py':
                 name = os.path.basename(filename).split('.')[0]
                 yield filename.replace('.py', '')
+
+def clean_uuid(item):
+    if item is None:
+        return None
+    item = str(item)
+    # item = item.replace(' ', '_')
+    item = item.replace('-', '_')
+    item = item.replace('\\', '_')
+    item = item.replace('/', '_')
+    item = item.replace('\'', '')
+    item = item.replace('(', '')
+    item = item.replace(')', '')
+    return item
