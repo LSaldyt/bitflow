@@ -30,6 +30,7 @@ FORCE_SAVE_INTERVAL = 10 # Forcibly save batches every N seconds, even if they a
 def save_batch(schedule_queue, transaction_queue, batch):
     '''
     Save a batch to file and split it into a queue for scheduling new processes, and a queue for adding transactions to the database 
+
     :param schedule_queue: The input stream of new data for new processes
     :param transaction_queue: The input stream of transactions to be entered permanently in the database
     '''
@@ -37,9 +38,13 @@ def save_batch(schedule_queue, transaction_queue, batch):
     transaction_queue.put(batch)
     schedule_queue.put(batch)
 
+from collections import defaultdict
+
 def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     '''
-    A continually running process which serializes data that comes in via serialize_queue, and is then split into transaction_queue and schedule_queue
+    Save incoming data to disk, and send it out for further processing
+    Breaks data into batches defined by the sizes in the sizes dictionary
+    Data comes in from serialize_queue and is split into transaction_queue and schedule_queue.
 
     :param serialize_queue: The stream of data to be written to disk
     :param schedule_queue: The input stream of new data for new processes
@@ -47,7 +52,7 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
     :param sizes: (dict) Limits on the batch-size of particular neo4j labels
     '''
     batches   = dict()
-    counts    = dict()
+    counts    = defaultdict(lambda : 0)
     durations = dict()
     while True:
         try:
@@ -55,18 +60,18 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
             label = transaction.out_label
             if label is not None:
                 for sublabel in label.split(':'):
-                    if sublabel not in counts:
-                        counts[sublabel]  = 0
+                    # Start a new batch if necessary
                     if sublabel not in batches:
                         batches[sublabel] = Batch(sublabel, uuid=str(sublabel) + '_' + str(counts[sublabel]))
                         durations[sublabel] = time()
                     batch = batches[sublabel]
+                    # Add to the batch until it is long enough
                     batch.add(transaction)
                     max_length = sizes.get(sublabel, sizes['__default__'])
                     if len(batch) >= max_length:
                         save_batch(schedule_queue, transaction_queue, batches.pop(sublabel))
                         counts[sublabel]  += 1
-        except Empty:
+        except Empty: # If incoming data is slow, forcibly save batches
             labels = list(batches.keys())
             for label in labels:
                 if time() - durations[label] > FORCE_SAVE_INTERVAL:
@@ -76,7 +81,8 @@ def batch_serializer(serialize_queue, transaction_queue, schedule_queue, sizes):
 
 def run_module(module, serialize_queue, batch):
     '''
-    Simply runs a PeTaL module.
+    Helper function which simply runs a PeTaL module on data from batch and puts the result in serialize_queue.
+
     :param module: An instantiated PeTaL module, i.e. `WikipediaArticleModule()`
     :param serialize_queue: The stream of data to be written to disk, and later processed
     :param batch: The data on which this module depends
@@ -99,7 +105,9 @@ def run_module(module, serialize_queue, batch):
 
 def module_runner(module_name, serialize_queue, batch, settings_file, module_dir='modules'):
     '''
-    A helper function for running a module by name
+    A helper function for running a module by name.
+    This function is scheduled by the scheduler, either when the module is independent, or is dependent and has input data
+
     :param module_name: The name of the class, i.e. 'WikipediaArticleModule'
     :param serialize_queue: The stream of data to be written to disk, and later processed
     :param batch: A batch of data for dependent processes
@@ -114,6 +122,7 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
     '''
     Continually running "pager", which feeds data from the neo4j database into a process.
     Toggled by derived settings within a `Module` class.
+
     :param name: Name of the Module being fed paged data
     :param label: Neo4j node label to fetch data for
     :param serialize_queue: The stream of data to be written to disk, and later processed
@@ -122,7 +131,9 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
     :param module_dir: Where the modules live...
     '''
     log = Log(name=name, directory='paging')
-    driver = Driver(settings_file)
+
+    driver = Driver(settings_file) # neo4j connection to get data from
+
     module = fetch(name, directory=module_dir)
     module.add_driver(driver)
 
@@ -131,36 +142,34 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
 
     while True:
         query = matcher + 'WITH COUNT (n) AS count RETURN count'
+        log.log('Paging using query: ', query)
         # Count Batches with this label time. Helpful if ':Batch(label)' is an index within the database
         # Use CREATE INDEX ON :Batch(label) if it is not
         # TODO The above, automatically
         count = next(driver.run_query(query).records())['count']
-        log.log('Paging using query: ', query)
         log.log(name, ' page count: ', count)
-        if count > 0:
-            log.log('Continuing')
-            for i in range(count // page_size + 1):
-                # Get the next batch of nodes
-                page_query = matcher + 'RETURN (n) SKIP {} LIMIT {}'.format(i * page_size, page_size)
-                log.log('Page query: ', page_query)
-                pages = driver.run_query(page_query).records()
-                for page in pages:
-                    # Load a batch from neo4j
-                    label    = page['n']['label']
-                    uuid     = page['n']['uuid']
-                    rand     = page['n']['rand']
-                    # If the module has the 'epochs' field, feed batches multiple times
-                    # Otherwise, feed each batch once.
-                    has_epochs = hasattr(module, 'epochs')
-                    max_count = module.epochs if has_epochs else 1
-                    if batch_counts[uuid] < max_count:
-                        batch_counts[uuid] += 1
-                        log.log('Running page: ', str(uuid))
-                        batch = Batch(label, uuid=uuid, rand=rand)
-                        batch.load()
-                        run_module(module, serialize_queue, batch)
-                    else:
-                        pass
+        if count == 0:
+            continue
+
+        for i in range(count // page_size + 1): # Plus one accounts for items past a multiple of the page size, i.e. 11 items when page size is 10
+            # Get the next batch of nodes
+            page_query = matcher + 'RETURN (n) SKIP {} LIMIT {}'.format(i * page_size, page_size)
+            log.log('Page query: ', page_query)
+            pages = driver.run_query(page_query).records()
+            for page in (node['n'] for node in pages):
+                # Load a batch from neo4j
+                label = page['label']
+                uuid  = page['uuid']
+                rand  = page['rand']
+                # If the module has the 'epochs' field, feed batches multiple times
+                # Otherwise, feed each batch once.
+                max_count = module.epochs if hasattr(module, 'epochs') else 1
+                if batch_counts[uuid] < max_count:
+                    batch_counts[uuid] += 1
+                    log.log('Running page: ', str(uuid))
+                    batch = Batch(label, uuid=uuid, rand=rand)
+                    batch.load()
+                    run_module(module, serialize_queue, batch)
         sleep(delay)
 
 class Scheduler:
@@ -196,10 +205,10 @@ class Scheduler:
         self.schedule_queue    = Queue()
 
         # Initialize process for putting data streams to disk (serializer_process)
-        self.serializer_process     = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
+        self.serializer_process = Process(target=batch_serializer, args=(self.serialize_queue, self.transaction_queue, self.schedule_queue, self.sizes))
         self.serializer_process.daemon = True
         # Initialize process for putting data streams to neo4j database (driver_process)
-        self.driver_process    = Process(target=driver_listener,  args=(self.transaction_queue, settings_file))
+        self.driver_process = Process(target=driver_listener,  args=(self.transaction_queue, settings_file))
         self.driver_process.daemon = True
 
 
@@ -218,6 +227,8 @@ class Scheduler:
         Add a module, by name, to be run by the scheduler.
         If independent, it runs when the scheduler is started (or immediately if the scheduler is running)
         If dependent, it runs when appropriate data comes in, and the scheduler is running
+
+        :param module_name: The name of the module (str), i.e. WikipediaArticleModule
         '''
         self.log.log('Scheduling ', module_name)
         # Get dependencies of the module
@@ -226,23 +237,25 @@ class Scheduler:
         except KeyError:
             raise RuntimeError('The module ' + module_name + ' is not configured correctly. Check the module itself and .dependencies.json')
 
-        # If the module expects data from neo4j
+        # If the module expects data from neo4j, start a paging process to passively read data from neo4j
         if page:
             self.log.log('Starting pager for', module_name)
-            self.pagers.append(Process(target=pager, args=(module_name, in_label, self.serialize_queue, self.settings_file, self.settings['pager_delay'], self.settings['page_size'], self.module_dir)))
-            self.pagers[-1].daemon = True
-        # If the module is independent
+            proc = Process(target=pager, args=(module_name, in_label, self.serialize_queue, self.settings_file, self.settings['pager_delay'], self.settings['page_size'], self.module_dir))
+            proc.daemon = True
+            self.pagers.append(proc)
+        # If the module is independent, add it to active workers
         elif in_label is None:
             proc = Process(target=module_runner, args=(module_name, self.serialize_queue, None, self.settings_file, self.module_dir))
             proc.daemon = True
             self.workers.append((module_name, proc))
-        # If the module is dependent
+        # If the module is dependent, track this dependency for when input data comes in
         else:
             self.add_dependents(in_label, module_name)
 
     def add_dependents(self, in_label, module_name):
         '''
         Add a module as a dependent, possibly for multiple labels
+
         :param in_label: The label to run this module on
         :param module_name: The module to run 
         '''
@@ -279,6 +292,8 @@ class Scheduler:
     def start_process(self, dep_proc):
         '''
         Simply start a new dependent process that has been waiting.
+
+        :param dep_proc: Dependent process to start
         '''
         dependent, process = dep_proc
         self.log.log('Starting dependent ', dependent, ' ', process)
@@ -288,6 +303,7 @@ class Scheduler:
     def check_limit(self, dependent):
         '''
         Check if the scheduler is running within worker limits, defined in the JSON settings file
+
         :param dependent: A module name related to a worker (process) limit
         '''
         count = 0
@@ -332,6 +348,7 @@ class Scheduler:
     def status(self, duration):
         '''
         Report the schedulers status
+
         :param duration: Time in seconds the scheduler has run?
         '''
         running = dict()

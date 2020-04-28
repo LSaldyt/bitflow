@@ -6,11 +6,12 @@ from collections import defaultdict
 from time import sleep, time
 from queue import Empty
 
-from .utils.neo import page, add_json_node
+from .batch import Batch
+
 from .utils.log import Log
 from .utils.profile import Profile
 from .utils.transaction import Transaction
-from .batch import Batch
+from .utils.utils import page, add_json_node
 from .utils.utils import clean_uuid as clean
 
 '''

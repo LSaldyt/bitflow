@@ -3,7 +3,14 @@ from pprint import pprint
 import os, pickle
 
 class BatchLearner(Module):
+    '''
+    Template module for a machine learning module
+    Overloading learn(), test(), and val() will work for simple cases,
+      and process_batch() can be overloaded for more complicated cases
+    '''
     def __init__(self, filename=None, epochs=2, train_fraction=0.8, test_fraction=0.15, validate_fraction=0.05, **kwargs):
+        '''
+        '''
         Module.__init__(self, page_batches=True, **kwargs)
 
         self.epochs = epochs
@@ -26,18 +33,21 @@ class BatchLearner(Module):
             self.model = pickle.load(infile)
 
     def learn(self, batch):
-        self.log.log('Learning on ', batch.uuid)
+        raise NotImplementedError('Must implement learn()')
 
     def test(self, batch):
-        self.log.log('Testing on ', batch.uuid)
+        raise NotImplementedError('Must implement test()')
 
     def val(self, batch):
-        self.log.log('Validating on ', batch.uuid)
+        raise NotImplementedError('Must implement val()')
 
     def process(self, node):
         raise RuntimeError('Called process() for Batch Module')
 
     def process_batch(self, batch):
+        '''
+        Can be overloaded for special cases, but overloading learn(), test(), and val() works
+        '''
         if self.model is None:
             self.init_model()
         self.load()

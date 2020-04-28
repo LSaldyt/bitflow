@@ -7,6 +7,10 @@ import pickle
 
 PROFILE_DIR = 'data/profiles/'
 
+'''
+Automatically profile pipeline modules
+'''
+
 class Profile:
     def __init__(self, name, directory=None):
         self.base = ProfileBase()

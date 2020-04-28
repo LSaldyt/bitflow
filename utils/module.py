@@ -2,6 +2,10 @@ from .transaction import Transaction
 from .log import Log
 from .profile import Profile
 
+'''
+The base class for data pipeline Modules
+'''
+
 class Module:
     def __init__(self, in_label=None, out_label=None, connect_labels=None, name='Default', page_batches=False, save=True):
         self.name           = name

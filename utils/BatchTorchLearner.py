@@ -13,6 +13,7 @@ from time import sleep
 class BatchTorchLearner(BatchLearner):
     '''
     Base class for pytorch machine learning modules
+    For simple cases, transform() alone can be overloaded
     '''
     def __init__(self, criterion=None, optimizer=None, optimizer_kwargs=None, **kwargs):
         BatchLearner.__init__(self, **kwargs)
@@ -40,7 +41,7 @@ class BatchTorchLearner(BatchLearner):
         '''
         Must yield a list of tuples of (inputs, labels) for training
         '''
-        raise NotImplementedError('')
+        raise NotImplementedError('Must implement data transformation')
 
     def step(self, inputs, labels):
         raise RuntimeError('Batch learner called step()')

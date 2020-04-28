@@ -1,6 +1,10 @@
 from importlib import import_module
 import json, os
 
+'''
+Random code that has no better home. Most of this is meta relative to the pipeline
+'''
+
 def get_module_subdirs(directory='modules'):
     for name in os.listdir(directory):
         if 'modules' in name:
@@ -30,6 +34,9 @@ def get_module_names(directory='modules'):
                 yield filename.replace('.py', '')
 
 def clean_uuid(item):
+    '''
+    Used on UUIDs and links
+    '''
     if item is None:
         return None
     item = str(item)
@@ -41,3 +48,10 @@ def clean_uuid(item):
     item = item.replace('(', '')
     item = item.replace(')', '')
     return item
+
+def add_json_node(tx, label='Generic', properties=None):
+    if properties is None:
+        properties = dict()
+    prop_set = '{' + ','.join('{key}:${key}'.format(key=k) for k in properties) + '}'
+    query = 'MERGE (n:{label} '.format(label=label) + prop_set + ') RETURN n'
+    return tx.run(query, **properties)

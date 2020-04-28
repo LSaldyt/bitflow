@@ -9,6 +9,9 @@ from dash.dependencies import Input, Output
 import webbrowser
 
 class Dashboard:
+    '''
+    A live graph dashboard for use in ML modules!
+    '''
     def __init__(self):
         self.app = dash.Dash(__name__)
         self.app.layout = html.Div(
@@ -34,6 +37,10 @@ class Dashboard:
         ]
 
     def update_graph_live(self, n):
+        '''
+        Default plot: An increasing line...
+        Make this anything, i.e. loss over time?
+        '''
         line = list(range(n))
         return px.line(x=line, y=line)
 
