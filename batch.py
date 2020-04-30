@@ -1,7 +1,7 @@
 import pickle, os
 from random import random
 
-from utils.utils import clean_uuid
+from .utils.utils import clean_uuid
 
 class Batch:
     '''

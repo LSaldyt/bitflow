@@ -11,7 +11,7 @@ from .batch import Batch
 from .utils.log import Log
 from .utils.profile import Profile
 from .utils.transaction import Transaction
-from .utils.utils import page, add_json_node
+from .utils.utils import add_json_node
 from .utils.utils import clean_uuid as clean
 
 '''

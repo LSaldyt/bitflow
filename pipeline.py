@@ -100,7 +100,7 @@ class PipelineInterface:
 
     def clean(self):
         clean_dirs = ['logs', 'profiles', 'batches', 'images']
-        for directory in ['logs', 'profiles']:
+        for directory in ['logs', 'profiles', 'logs/modules', 'logs/paging', 'profiles/modules']:
             fulldir = 'data/' + directory
             try:
                 shutil.rmtree(fulldir)

@@ -1,7 +1,7 @@
 
 import os
 import json
-from .utils.utils import get_module_names, fetch
+from .utils import get_module_names, fetch
 
 def create_dependencies(directory='modules'):
     '''
