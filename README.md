@@ -13,7 +13,7 @@ Here, "types" are neo4j labels.
 #### Independent
 A basic skeleton of an "independent" module (with no inputs) looks like this:
 ```python
-from pipeline.utils.module import Module
+from bitflow.utils.module import Module
 
 class MyModule(Module):
     def __init__(self, in_label=None, out_label='Output', connect_labels=None, name='MyModule'):
@@ -28,7 +28,7 @@ A good example of this is `modules/mining/OptimizedCatalog.py`
 #### Dependent
 A basic skeleton of a "dependent" module looks like this:
 ```python
-from pipeline.utils.module import Module
+from bitflow.utils.module import Module
 
 class MyModule(Module):
     def __init__(self, in_label='Input', out_label='Output', connect_labels=('to', 'from'), name='MyModule'):
@@ -45,12 +45,12 @@ Within a Module's process() function, self.default\_transaction(data) is used to
 
 #### Machine Learning
 
-Relevant base classes to machine learning live in `pipeline/utils`.  
+Relevant base classes to machine learning live in `bitflow.utils`.  
 In particular, `BatchLearner`, `BatchTorchLearner`, `OnlineLearner`, and `OnlineTorchLearner` are worth looking at.
 
 A basic skeleton of a neural-network based machine learning module in PeTaL looks like this:
 ```python
-from petal.pipeline.utils.BatchTorchLearner import BatchTorchLearner
+from petal.bitflow.utils.BatchTorchLearner import BatchTorchLearner
 
 class MyMLModule(BatchTorchLearner):
     def __init__(self, filename='data/models/my_ML_module.nn'):
@@ -99,7 +99,7 @@ Scheduler will load any modules importable from the `modules` subdirectories.
 It expects a file containing a class of the same name.
 For example `modules/mymodules/MyModule.py` with `class MyModule: ...` within the file is a valid setup.
 Also, each module should derive from a base `Module` class (or another class that derives from `Module`.
-As documented above, these are located in `pipeline.utils`.
+As documented above, these are located in `bitflow.utils`.
 
 Scheduler reads the type signatures of modules, and runs them based on this.  
 For instance, `OptimizedCatalog` is "indepdent", because it generates `Taxon` nodes without any input, so this is run initially.  
@@ -110,7 +110,7 @@ For instance, `WikipediaModule`, `EOLModule`, and `JEBModule` will all run after
 
 Driver is just a connection to a neo4j database.
 Essentially it enables some useful abstraction over the `neo4j` api, specifically allowing the developer to worry only about the JSON containing in nodes, and their labels and connections.
-This is done by using the `Transaction` class, located in `pipeline/utils`.
+This is done by using the `Transaction` class, located in `bitflow.utils`.
 For further understanding, see the file-level documentation.
 
 #### Pipeline
