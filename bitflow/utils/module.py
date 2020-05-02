@@ -3,7 +3,7 @@ from .log import Log
 from .profile import Profile
 
 '''
-The base class for data pipeline Modules
+The base class for data bitflow Modules
 '''
 
 class Module:

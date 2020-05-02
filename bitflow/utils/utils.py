@@ -2,7 +2,7 @@ from importlib import import_module
 import json, os
 
 '''
-Random code that has no better home. Most of this is meta relative to the pipeline
+Random code that has no better home. Most of this is meta relative to the bitflow
 '''
 
 def get_module_subdirs(directory='modules'):

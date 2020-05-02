@@ -11,7 +11,7 @@ from .utils.log import Log
 from .utils.create_dependencies import create_dependencies
 
 
-class PipelineInterface:
+class BitflowInterface:
     '''
     This class defines an interface to a data mining server. 
     It allows modules and settings to the scheduler to be updated dynamically without stopping processing.
@@ -20,13 +20,13 @@ class PipelineInterface:
     '''
     def __init__(self, filename, module_dir='modules'):
         '''
-        :param filename: A pipeline config file, JSON. See /config/ directory for examples
+        :param filename: A bitflow config file, JSON. See /config/ directory for examples
         :param module_dir: A directory with the relevant modules to be run
         '''
         self.module_dir = module_dir
         print('LOADING PeTaL config ({})'.format(filename), flush=True)
         create_dependencies(directory=module_dir)
-        self.log = Log('pipeline_server')
+        self.log = Log('bitflow_server')
         self.scheduler = Scheduler(filename, module_dir)
         self.times = dict()
         self.filename = filename
@@ -50,7 +50,7 @@ class PipelineInterface:
 
     def load_settings(self):
         '''
-        Copy the settings file into the pipelines settings.
+        Copy the settings file into the bitflows settings.
         For instance, can change the reload time from 30 to 10s if desired
         '''
         with open(self.filename, 'r') as infile:
@@ -60,21 +60,21 @@ class PipelineInterface:
             if k.startswith('scheduler:'):
                 k = k.replace('scheduler:', '')
                 setattr(self.scheduler, k, v)
-            elif k.startswith('pipeline:'):
-                k = k.replace('pipeline:', '')
+            elif k.startswith('bitflow:'):
+                k = k.replace('bitflow:', '')
                 setattr(self, k, v)
         return settings
 
     def start_server(self, clean=True):
         '''
-        Start the pipeline server..
+        Start the bitflow server..
         :param clean: Remove data from a previous run of the server, i.e. batches and so on
         '''
         if clean:
             print('CLEANING Old Data', flush=True)
             self.clean()
-        print('STARTING PeTaL Data Pipeline Server', flush=True)
-        self.log.log('Starting pipeline server')
+        print('STARTING PeTaL Data Bitflow Server', flush=True)
+        self.log.log('Starting bitflow server')
         start = time()
         self.reload_modules() 
         self.log.log('Starting scheduler')
@@ -93,9 +93,9 @@ class PipelineInterface:
                     self.reload_modules()
                     self.log.log('Actively reloading settings')
         except KeyboardInterrupt as interrupt:
-            print('INTERRUPTING PeTaL Data Pipeline Server', flush=True)
+            print('INTERRUPTING PeTaL Data Bitflow Server', flush=True)
         finally:
-            print('STOPPING PeTaL Data Pipeline Server', flush=True)
+            print('STOPPING PeTaL Data Bitflow Server', flush=True)
             self.scheduler.stop()
 
     def clean(self):

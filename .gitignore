@@ -16,3 +16,4 @@ profiles/*
 PeTaL_pipeline.egg-info/
 build
 dist
+bitflow.egg-info

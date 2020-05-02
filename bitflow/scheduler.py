@@ -12,9 +12,9 @@ from .driver import Driver, driver_listener
 from .utils.log import Log
 
 '''
-This is definitely the most complicated code of the data pipeline, but justifiably so.
+This is definitely the most complicated code of the data bitflow, but justifiably so.
 The scheduler manages running processes and, unsurprisingly, schedules new ones.
-It separates data streams, such as database transactions, which allows pipeline modules to run independently.
+It separates data streams, such as database transactions, which allows bitflow modules to run independently.
 There are three streams in total:
     serialize_queue: data is scheduled to be written to disk (separates disk-writing from cpu-bound processing)
     schedule_queue: data is given to modules which will run using it (i.e. species names to download articles for)

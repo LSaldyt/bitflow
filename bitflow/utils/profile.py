@@ -8,7 +8,7 @@ import pickle
 PROFILE_DIR = 'data/profiles/'
 
 '''
-Automatically profile pipeline modules
+Automatically profile bitflow modules
 '''
 
 class Profile:

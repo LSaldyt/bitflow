@@ -5,7 +5,7 @@ from .utils.utils import clean_uuid
 
 class Batch:
     '''
-    A data storage class used within the pipeline.
+    A data storage class used within the bitflow.
     Literally just a serializable labeled list of items with a piece of random information attached,
     which can be used to separate data into categories (conventionally test, train, validate)
     '''
