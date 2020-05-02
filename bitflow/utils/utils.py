@@ -7,23 +7,18 @@ Random code that has no better home. Most of this is meta relative to the bitflo
 
 def get_module_subdirs(directory='modules'):
     for name in os.listdir(directory):
-        if 'modules' in name:
+        print(name, flush=True)
+        if os.path.isdir(name) and name != 'libraries':
             yield name
 
 def fetch(module_name, directory='modules', settings_file=None):
-    try:
-        module = import_module(module_name)
-    except ModuleNotFoundError:
-        for subdir in get_module_subdirs(directory=directory):
-            name = directory + '.{}.{}'.format(subdir, module_name)
-            try:
+    for subdir in get_module_subdirs(directory=directory):
+        for filename in os.listdir(directory + '/' + subdir):
+            if module_name in filename:
+                name = directory + '.{}.{}'.format(subdir, module_name)
                 module = import_module(name)
-                break
-            except ModuleNotFoundError as e:
-                pass
-        else:
-            raise RuntimeError('Could not find module: ' + name)
-    return getattr(module, module_name)()
+                return getattr(module, module_name)()
+    raise ModuleNotFoundError('Could not find module: ' + name)
             
 def get_module_names(directory='modules'):
     for subdir in get_module_subdirs(directory=directory):

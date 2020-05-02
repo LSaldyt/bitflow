@@ -13,6 +13,7 @@ def create_dependencies(directory='modules'):
     '''
     dependencies = dict()
     for name in get_module_names(directory=directory):
+        print(name, flush=True)
         module = fetch(name, directory=directory)
         in_type  = module.in_label
         out_type = module.out_label
