@@ -74,7 +74,7 @@ class Driver():
                 if id2 in self.hset:
                     return False
                 self.hset.add(id2)
-                self.session.write_transaction(add_json_node, label, data)
+                self.session.write_transaction(add_json_node, transaction.out_label, transaction.data)
             # Add a new connection to neo4j
             if id1 is not None and transaction.connect_labels is not None:
                 id1 = str(id1)

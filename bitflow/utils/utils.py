@@ -7,8 +7,7 @@ Random code that has no better home. Most of this is meta relative to the bitflo
 
 def get_module_subdirs(directory='modules'):
     for name in os.listdir(directory):
-        print(name, flush=True)
-        if os.path.isdir(name) and name != 'libraries':
+        if name != 'libraries' and name != '__init__.py':
             yield name
 
 def fetch(module_name, directory='modules', settings_file=None):

@@ -9,11 +9,11 @@ def create_dependencies(directory='modules'):
     Dump these to a JSON file.
 
     **Potentially uses a lot of memory, and is separated for this reason**
-
     '''
+    print('CREATING DEPENDENCIES', flush=True)
     dependencies = dict()
     for name in get_module_names(directory=directory):
-        print(name, flush=True)
+        print('  Recognized module: ', name, flush=True)
         module = fetch(name, directory=directory)
         in_type  = module.in_label
         out_type = module.out_label

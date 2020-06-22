@@ -273,6 +273,7 @@ class Scheduler:
         self.driver_process.start()
         self.serializer_process.start()
         for name, process in self.workers:
+            print('  Starting ', name, flush=True)
             self.log.log('Starting ', name)
             process.start()
         for pager in self.pagers:
@@ -298,6 +299,7 @@ class Scheduler:
         dependent, process = dep_proc
         self.log.log('Starting dependent ', dependent, ' ', process)
         process.start()
+        print('  Started ', dependent, flush=True)
         self.workers.append((dependent, process))
 
     def check_limit(self, dependent):
