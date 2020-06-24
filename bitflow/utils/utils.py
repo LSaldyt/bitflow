@@ -6,9 +6,11 @@ from pathlib import Path
 Random code that has no better home. Most of this is meta relative to the bitflow
 '''
 
+EXCLUDE = {'libraries', '__init__.py', '__pycache__'}
+
 def get_module_subdirs(directory='modules'):
     for name in os.listdir(directory):
-        if name != 'libraries' and name != '__init__.py':
+        if name not in EXCLUDE:
             yield name
 
 def fetch(module_name, directory='modules', settings_file=None):
@@ -23,8 +25,9 @@ def fetch(module_name, directory='modules', settings_file=None):
 def get_module_names(directory='modules'):
     files = []
     for path in Path(directory).rglob('*.py'):
-        files.append(path.name)
-    files = [x for x in files if "__init__.py" not in x]  # remove all the __init__.py
+        for exclude in EXCLUDE:
+            if exclude not in path.name:
+                files.append(path.name)
 
     for f in files:
         yield f.replace('.py', '')
