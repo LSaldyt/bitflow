@@ -1,6 +1,5 @@
 from importlib import import_module
 import json, os
-from pathlib import Path
 
 '''
 Random code that has no better home. Most of this is meta relative to the bitflow
@@ -23,14 +22,11 @@ def fetch(module_name, directory='modules', settings_file=None):
     raise ModuleNotFoundError('Could not find module: ' + module_name)
             
 def get_module_names(directory='modules'):
-    files = []
-    for path in Path(directory).rglob('*.py'):
-        for exclude in EXCLUDE:
-            if exclude not in path.name:
-                files.append(path.name)
-
-    for f in files:
-        yield f.replace('.py', '')
+    for root, folders, files in os.walk(directory):
+        if not ('libraries' in root or '__pycache__' in root):
+        for filename in files:
+            if filename != '__init__.py':
+                yield f.replace('.py', '')
 
 def clean_uuid(item):
     '''
