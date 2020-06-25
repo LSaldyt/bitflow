@@ -10,7 +10,7 @@ EXCLUDE_FILES = {'__init__.py'}
 
 def get_module_subdirs(directory='modules'):
     for root, folders, files in os.walk(directory):
-        if not ('libraries' in root or '__pycache__' in root):
+        if not ('libraries' in root or '__pycache__' in root) and root != directory:
             yield root
 
 def fetch(module_name, directory='modules', settings_file=None):

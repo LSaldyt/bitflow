@@ -1,4 +1,5 @@
 from neo4j import GraphDatabase, basic_auth
+import neo4j
 import json
 import neobolt
 
@@ -30,7 +31,7 @@ def retry(f):
         while True:
             try:
                 return f(*args, **kwargs)
-            except neobolt.exceptions.ServiceUnavailable as e:
+            except neo4j.exceptions.ServiceUnavailable as e:
                 print('Cannot reach neo4j server. Is it running? Sleeping 1s..', flush=True)
                 sleep(1)
     return inner
