@@ -146,7 +146,7 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
         # Count Batches with this label time. Helpful if ':Batch(label)' is an index within the database
         # Use CREATE INDEX ON :Batch(label) if it is not
         # TODO The above, automatically
-        count = next(driver.run_query(query).records())['count']
+        count = driver.run_query(query).count
         log.log(name, ' page count: ', count)
         if count == 0:
             continue

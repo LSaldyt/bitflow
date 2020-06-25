@@ -106,7 +106,7 @@ class Driver():
         :param uuid: The uuid of a neo4j node
         '''
         uuid = clean(uuid)
-        records = list(self.session.run('MATCH (n) WHERE n.uuid = \'{uuid}\' RETURN n'.format(uuid=str(uuid))).records())
+        records = list(self.session.run('MATCH (n) WHERE n.uuid = \'{uuid}\' RETURN n'.format(uuid=str(uuid))))
         if len(records) > 0:
             return records[0]['n']
         else:
@@ -118,7 +118,7 @@ class Driver():
         Count the number of nodes with a particular label in the database
         :param label: The label to count nodes of
         '''
-        records = self.session.run('MATCH (x:{label}) WITH COUNT (x) AS count RETURN count'.format(label=label)).records()
+        records = self.session.run('MATCH (x:{label}) WITH COUNT (x) AS count RETURN count'.format(label=label))
         return list(records)[0]['count']
 
 def driver_listener(transaction_queue, settings_file):
