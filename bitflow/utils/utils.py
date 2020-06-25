@@ -5,28 +5,28 @@ import json, os
 Random code that has no better home. Most of this is meta relative to the bitflow
 '''
 
-EXCLUDE = {'libraries', '__init__.py', '__pycache__'}
+EXCLUDE_DIRS  = {'libraries', '__pycache__'}
+EXCLUDE_FILES = {'__init__.py'}
 
 def get_module_subdirs(directory='modules'):
-    for name in os.listdir(directory):
-        if name not in EXCLUDE:
-            yield name
+    for root, folders, files in os.walk(directory):
+        if not ('libraries' in root or '__pycache__' in root):
+            yield root
 
 def fetch(module_name, directory='modules', settings_file=None):
     for subdir in get_module_subdirs(directory=directory):
-        for filename in os.listdir(directory + '/' + subdir):
+        for filename in os.listdir(subdir):
             if module_name in filename:
-                name = directory + '.{}.{}'.format(subdir, module_name)
+                name = '{}.{}'.format(subdir.replace('/', '.').replace('\\', '.'), module_name)
                 module = import_module(name)
                 return getattr(module, module_name)()
     raise ModuleNotFoundError('Could not find module: ' + module_name)
             
 def get_module_names(directory='modules'):
-    for root, folders, files in os.walk(directory):
-        if not ('libraries' in root or '__pycache__' in root):
-        for filename in files:
-            if filename != '__init__.py':
-                yield f.replace('.py', '')
+    for directory in get_module_subdirs(directory=directory):
+        for filename in os.listdir(directory):
+            if filename.endswith('.py') and filename != '__init__.py':
+                yield filename.replace('.py', '')
 
 def clean_uuid(item):
     '''
