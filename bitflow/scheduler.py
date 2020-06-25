@@ -146,7 +146,7 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
         # Count Batches with this label time. Helpful if ':Batch(label)' is an index within the database
         # Use CREATE INDEX ON :Batch(label) if it is not
         # TODO The above, automatically
-        count = driver.run_query(query).count
+        count = driver.run_query(query).single()['count']
         log.log(name, ' page count: ', count)
         if count == 0:
             continue
@@ -155,7 +155,7 @@ def pager(name, label, serialize_queue, settings_file, delay, page_size, module_
             # Get the next batch of nodes
             page_query = matcher + 'RETURN (n) SKIP {} LIMIT {}'.format(i * page_size, page_size)
             log.log('Page query: ', page_query)
-            pages = driver.run_query(page_query).records()
+            pages = driver.run_query(page_query)
             for page in (node['n'] for node in pages):
                 # Load a batch from neo4j
                 label = page['label']

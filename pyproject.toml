@@ -9,7 +9,7 @@ python = "^3.7"
 beautifulsoup4 = "^4.9.1"
 urllib3 = "*"
 requests = "*"
-neo4j = "1.7.6"
+neo4j = "^4.0.0"
 
 [tool.poetry.dev-dependencies]
 
