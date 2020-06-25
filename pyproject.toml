@@ -1,15 +1,15 @@
 [tool.poetry]
 name = "bitflow"
-version = "0.5.0"
+version = "0.5.1"
 description = ""
 authors = ["LSaldyt <lucassaldyt@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-neo4j = "^4.0.0"
 beautifulsoup4 = "^4.9.1"
 urllib3 = "*"
 requests = "*"
+neo4j = "1.7.6"
 
 [tool.poetry.dev-dependencies]
 
