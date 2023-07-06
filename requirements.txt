@@ -10,7 +10,7 @@ pandas==0.25.3
 Pillow==7.0.0                
 requests==2.23.0               
 scholarly==0.2.5                
-scipy==1.4.1                
+scipy==1.10.0                
 seaborn==0.10.0               
 torch==1.5.0.dev20200311+cpu
 torchvision==0.6.0.dev20200311+cpu
